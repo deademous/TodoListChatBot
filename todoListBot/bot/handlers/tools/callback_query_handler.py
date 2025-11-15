@@ -53,6 +53,43 @@ class CallbackQueryHandler(Handler):
             elif action == "task_cancel":
                 new_status = "canceled"
 
+            elif action == "task_postpone":
+                bot.database_client.update_user_data(
+                    telegram_id, {"postpone_task_id": task_id}
+                )
+
+                bot.database_client.update_user_state(telegram_id, "WAIT_POSTPONE_TIME")
+
+                bot.telegram_client.deleteMessage(
+                    chat_id=chat_id, message_id=message_id
+                )
+
+                inline_keyboard = json.dumps(
+                    {
+                        "inline_keyboard": [
+                            [
+                                {"text": "На 1 час", "callback_data": "postpone:1h"},
+                                {"text": "На 3 часа", "callback_data": "postpone:3h"},
+                            ],
+                            [
+                                {
+                                    "text": "На Завтра",
+                                    "callback_data": "postpone:tomorrow",
+                                },
+                                {"text": "На 1 день", "callback_data": "postpone:1d"},
+                            ],
+                        ]
+                    }
+                )
+
+                bot.telegram_client.sendMessage(
+                    chat_id=chat_id,
+                    text="🕑 На сколько нужно отложить задачу? Выберите или введите дату/время (например, 'завтра 18:00' или '2ч'):",
+                    reply_markup=inline_keyboard,
+                )
+
+                return HandlerStatus.STOP
+
             if new_status:
                 bot.database_client.update_task_status(task_id, new_status)
 

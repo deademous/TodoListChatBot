@@ -12,6 +12,7 @@ from bot.handlers.tools.callback_query_handler import CallbackQueryHandler
 from bot.handlers.menu_handlers.message_settings import MessageSettings
 from bot.handlers.menu_handlers.message_help import MessageHelp
 from bot.handlers.state_handlers.settings_time_handler import SettingsTimeHandler
+from bot.handlers.state_handlers.postpone_handler import PostponeHandler
 
 
 def get_handlers() -> list[Handler]:
@@ -28,5 +29,6 @@ def get_handlers() -> list[Handler]:
         TaskTimeHandler(),
         TaskNoTimeHandler(),
         SettingsTimeHandler(),
+        PostponeHandler(),
         CallbackQueryHandler(),
     ]

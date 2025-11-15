@@ -223,6 +223,17 @@ def update_task_status(task_id: int, new_status: str) -> None:
             )
 
 
+def update_task(
+    task_id: int, task_date: str | None, task_time: str | None, status: str
+) -> None:
+    with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+        with connection:
+            connection.execute(
+                "UPDATE tasks SET task_date = ?, task_time = ?, status = ? WHERE id = ?",
+                (task_date, task_time, status, task_id),
+            )
+
+
 def get_task_by_id(task_id: int) -> dict | None:
     with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
         connection.row_factory = sqlite3.Row
