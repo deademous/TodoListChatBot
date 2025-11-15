@@ -30,6 +30,8 @@ class TaskNoTimeHandler(Handler):
 
         bot.database_client.clear_user_state_and_temp_data(telegram_id)
 
+        bot.telegram_client.answerCallbackQuery(update["callback_query"]["id"])
+
         bot.telegram_client.editMessageText(
             chat_id=chat_id,
             message_id=message_id,

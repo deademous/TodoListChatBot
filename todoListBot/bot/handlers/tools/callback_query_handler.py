@@ -1,6 +1,8 @@
+import json
 import bot.telegram_client
 import bot.database_client
 from bot.handlers.tools.handler import Handler, HandlerStatus
+from bot.handlers.tools.task_card import format_task_card_text
 
 
 class CallbackQueryHandler(Handler):
@@ -36,6 +38,39 @@ class CallbackQueryHandler(Handler):
                 )
 
             return HandlerStatus.STOP
+
+        elif callback_data.startswith("task_"):
+            try:
+                action, task_id_str = callback_data.split(":", 1)
+                task_id = int(task_id_str)
+            except ValueError:
+                return HandlerStatus.STOP
+
+            new_status = None
+
+            if action == "task_done":
+                new_status = "done"
+            elif action == "task_cancel":
+                new_status = "canceled"
+
+            if new_status:
+                bot.database_client.update_task_status(task_id, new_status)
+
+                updated_task = bot.database_client.get_task_by_id(task_id)
+
+                if updated_task:
+                    new_card_text = format_task_card_text(updated_task)
+
+                    bot.telegram_client.editMessageText(
+                        chat_id=chat_id,
+                        message_id=message_id,
+                        text=new_card_text,
+                        reply_markup=json.dumps({"inline_keyboard": []}),
+                    )
+
+                return HandlerStatus.STOP
+
+        return HandlerStatus.CONTINUE
 
         if callback_data == "set_morning":
             bot.database_client.update_user_state(telegram_id, "WAIT_SETTING_MORNING")

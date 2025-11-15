@@ -213,3 +213,19 @@ def update_user_setting_time(
             f"UPDATE user_settings SET {setting_type} = ? WHERE telegram_id = ?",
             (new_time, telegram_id),
         )
+
+
+def update_task_status(task_id: int, new_status: str) -> None:
+    with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+        with connection:
+            connection.execute(
+                "UPDATE tasks SET status = ? WHERE id = ?", (new_status, task_id)
+            )
+
+
+def get_task_by_id(task_id: int) -> dict | None:
+    with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+        connection.row_factory = sqlite3.Row
+        cursor = connection.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
+        result = cursor.fetchone()
+        return dict(result) if result else None

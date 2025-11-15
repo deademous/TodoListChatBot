@@ -3,12 +3,21 @@ import json
 
 def format_task_card_text(task: dict) -> str:
 
+    status = task.get("status", "active")
+
     if task.get("task_time"):
         time_str = f"[{task['task_time']}]"
     else:
         time_str = "[Без времени]"
 
-    return f"{time_str} {task['text']}"
+    text = task["text"]
+
+    if status == "done":
+        return f"✅ [ВЫПОЛНЕНО] {time_str} {text}"
+    elif status == "canceled":
+        return f"❌ [ОТМЕНЕНО] {time_str} {text}"
+
+    return f"{time_str} {text}"
 
 
 def get_task_card_reply_markup(task_id: int) -> str:
