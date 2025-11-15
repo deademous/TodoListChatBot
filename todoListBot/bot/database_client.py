@@ -55,7 +55,8 @@ def recreate_database() -> None:
 
         # user_settings table
         connection.execute("DROP TABLE IF EXISTS user_settings")
-        connection.execute("""
+        connection.execute(
+            """
         CREATE TABLE IF NOT EXISTS user_settings
         (
             id INTEGER PRIMARY KEY,
@@ -96,11 +97,14 @@ def persist_updates(updates: list) -> None:
         )
     connection.close()
 
+
 def clear_user_state_and_temp_data(telegram_id: int) -> None:
     with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
         connection.execute(
-            "UPDATE users SET state = NULL, data_json = NULL WHERE telegram_id = ?", (telegram_id,)
+            "UPDATE users SET state = NULL, data_json = NULL WHERE telegram_id = ?",
+            (telegram_id,),
         )
+
 
 def update_user_state(telegram_id: int, state: str | None) -> None:
     with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
@@ -115,7 +119,8 @@ def get_user(telegram_id: int) -> dict:
         with connection:
             connection.row_factory = sqlite3.Row
         cursor = connection.execute(
-            "SELECT id, telegram_id, state, data_json FROM users WHERE telegram_id = ?", (telegram_id,)
+            "SELECT id, telegram_id, state, data_json FROM users WHERE telegram_id = ?",
+            (telegram_id,),
         )
         result = cursor.fetchone()
         if result:
@@ -124,32 +129,36 @@ def get_user(telegram_id: int) -> dict:
 
 
 def update_user_data(telegram_id: int, new_data: dict) -> None:
-    
+
     user = get_user(telegram_id)
-    
+
     if user is None:
         return
-        
-    existing_data_str = user.get("data_json") 
-    
+
+    existing_data_str = user.get("data_json")
+
     existing_data = json.loads(existing_data_str) if existing_data_str else {}
-    
+
     existing_data.update(new_data)
-    
+
     with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
         with connection:
             connection.execute(
-                "UPDATE users SET data_json = ? WHERE telegram_id = ?", 
+                "UPDATE users SET data_json = ? WHERE telegram_id = ?",
                 (json.dumps(existing_data, ensure_ascii=False, indent=2), telegram_id),
             )
 
-def create_task(telegram_id: int, text: str, task_date: str | None, task_time: str | None) -> int:
+
+def create_task(
+    telegram_id: int, text: str, task_date: str | None, task_time: str | None
+) -> int:
     with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
         cursor = connection.execute(
             "INSERT INTO tasks (telegram_id, text, task_date, task_time) VALUES (?, ?, ?, ?)",
-            (telegram_id, text, task_date, task_time)
+            (telegram_id, text, task_date, task_time),
         )
         return cursor.lastrowid
+
 
 def get_tasks_by_filter(telegram_id: int, filter_type: str) -> list[dict]:
     with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
@@ -165,16 +174,42 @@ def get_tasks_by_filter(telegram_id: int, filter_type: str) -> list[dict]:
             query = "SELECT * FROM tasks WHERE telegram_id = ? AND status = 'active' AND task_date IS NULL"
         else:
             return []
-            
+
         cursor = connection.execute(query, params)
         return [dict(row) for row in cursor.fetchall()]
+
 
 def get_active_tasks(telegram_id: int) -> list[dict]:
     with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
         connection.row_factory = sqlite3.Row
         cursor = connection.execute(
             "SELECT * FROM tasks WHERE telegram_id = ? AND status = 'active' ORDER BY task_date, task_time",
-            (telegram_id,)
+            (telegram_id,),
         )
         return [dict(row) for row in cursor.fetchall()]
 
+
+def get_user_settings(telegram_id: int) -> dict:
+    with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+        connection.row_factory = sqlite3.Row
+        cursor = connection.execute(
+            "SELECT morning_digest_time, evening_review_time FROM user_settings WHERE telegram_id = ?",
+            (telegram_id,),
+        )
+        result = cursor.fetchone()
+        if result:
+            return dict(result)
+        return {"morning_digest_time": "09:00", "evening_review_time": "21:00"}
+
+
+def update_user_setting_time(
+    telegram_id: int, setting_type: str, new_time: str
+) -> None:
+    if setting_type not in ("morning_digest_time", "evening_review_time"):
+        return
+
+    with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+        connection.execute(
+            f"UPDATE user_settings SET {setting_type} = ? WHERE telegram_id = ?",
+            (new_time, telegram_id),
+        )

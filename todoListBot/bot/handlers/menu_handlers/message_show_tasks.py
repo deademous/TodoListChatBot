@@ -1,4 +1,3 @@
-
 import bot.telegram_client
 import bot.database_client
 from bot.handlers.tools.handler import Handler, HandlerStatus
@@ -6,7 +5,7 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 
 class MessageShowTasks(Handler):
 
-    def can_handle(self, update: dict, state: str,data_json: dict) -> bool:
+    def can_handle(self, update: dict, state: str, data_json: dict) -> bool:
         return (
             state is None
             and "message" in update

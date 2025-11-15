@@ -21,7 +21,6 @@ class MessageAddTask(Handler):
 
         bot.database_client.update_user_state(telegram_id, "WAIT_TASK_NAME")
 
-        reply_markup = json.dumps({"remove_keyboard": True})
         bot.telegram_client.sendMessage(
             chat_id=chat_id, text="Напишите, что нужно сделать:"
         )
