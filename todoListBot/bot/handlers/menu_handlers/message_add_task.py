@@ -1,5 +1,3 @@
-import json
-
 import bot.telegram_client
 import bot.database_client
 from bot.handlers.tools.handler import Handler, HandlerStatus

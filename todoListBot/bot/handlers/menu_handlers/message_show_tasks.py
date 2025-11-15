@@ -1,6 +1,10 @@
 import bot.telegram_client
 import bot.database_client
 from bot.handlers.tools.handler import Handler, HandlerStatus
+from bot.handlers.tools.task_card import (
+    format_task_card_text,
+    get_task_card_reply_markup,
+)
 
 
 class MessageShowTasks(Handler):
@@ -17,14 +21,46 @@ class MessageShowTasks(Handler):
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 
-        tasks = bot.database_client.get_active_tasks(telegram_id)
+        bot.database_client.clear_user_state_and_temp_data(telegram_id)
 
-        if not tasks:
-            text = "Задач пока нет."
-        else:
-            text = "Ваши активные задачи:\n"
+        task_groups = [
+            ("📅 Задачи на Сегодня:", "show_today"),
+            ("➡️ Задачи на Завтра:", "show_tomorrow"),
+            ("📝 Задачи без даты:", "show_nodate"),
+        ]
+
+        found_any_tasks = False
+
+        for header, filter_type in task_groups:
+            tasks = bot.database_client.get_tasks_by_filter(telegram_id, filter_type)
+
+            bot.telegram_client.sendMessage(
+                chat_id=chat_id,
+                text=f"\n{header}\n",
+            )
+
+            if not tasks:
+                bot.telegram_client.sendMessage(chat_id=chat_id, text="Список пуст.")
+                continue
+
+            found_any_tasks = True
+
             for task in tasks:
-                text += f"\n• {task['text']}"
+                task_id = task["id"]
 
-        bot.telegram_client.sendMessage(chat_id=chat_id, text=text)
+                card_text = format_task_card_text(task)
+
+                card_markup = get_task_card_reply_markup(task_id)
+
+                bot.telegram_client.sendMessage(
+                    chat_id=chat_id,
+                    text=card_text,
+                    reply_markup=card_markup,
+                )
+
+        if not found_any_tasks:
+            bot.telegram_client.sendMessage(
+                chat_id=chat_id, text="У вас пока нет активных задач."
+            )
+
         return HandlerStatus.STOP

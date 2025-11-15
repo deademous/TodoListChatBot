@@ -5,19 +5,6 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 import re
 
 
-def get_main_menu_keyboard() -> str:
-    return json.dumps(
-        {
-            "keyboard": [
-                [{"text": "➕ Добавить задачу"}],
-                [{"text": "📅 Мои задачи"}, {"text": "⚙️ Настройки"}],
-                [{"text": "❓ Помощь"}],
-            ],
-            "resize_keyboard": True,
-        }
-    )
-
-
 def is_valid_time(time_str: str) -> bool:
     if re.fullmatch(r"([01]\d|2[0-3]):([0-5]\d)", time_str):
         return True

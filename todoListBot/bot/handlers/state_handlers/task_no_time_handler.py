@@ -2,6 +2,10 @@ import json
 import bot.telegram_client
 import bot.database_client
 from bot.handlers.tools.handler import Handler, HandlerStatus
+from bot.handlers.tools.task_card import (
+    format_task_card_text,
+    get_task_card_reply_markup,
+)
 
 
 class TaskNoTimeHandler(Handler):
@@ -20,7 +24,9 @@ class TaskNoTimeHandler(Handler):
         task_text = data_json.get("text")
         task_date = data_json.get("date")
 
-        bot.database_client.create_task(telegram_id, task_text, task_date, None)
+        task_id = bot.database_client.create_task(
+            telegram_id, task_text, task_date, None
+        )
 
         bot.database_client.clear_user_state_and_temp_data(telegram_id)
 
@@ -44,6 +50,20 @@ class TaskNoTimeHandler(Handler):
                     "resize_keyboard": True,
                 }
             ),
+        )
+
+        new_task = {
+            "id": task_id,
+            "text": task_text,
+            "task_date": task_date,
+            "task_time": None,
+        }
+
+        card_text = format_task_card_text(new_task)
+        card_markup = get_task_card_reply_markup(task_id)
+
+        bot.telegram_client.sendMessage(
+            chat_id=chat_id, text=card_text, reply_markup=card_markup
         )
 
         return HandlerStatus.STOP

@@ -2,6 +2,10 @@ import json
 import bot.telegram_client
 import bot.database_client
 from bot.handlers.tools.handler import Handler, HandlerStatus
+from bot.handlers.tools.task_card import (
+    format_task_card_text,
+    get_task_card_reply_markup,
+)
 
 
 class TaskTimeHandler(Handler):
@@ -20,7 +24,7 @@ class TaskTimeHandler(Handler):
         task_text = data_json.get("text")
         task_date = data_json.get("date")
 
-        bot.database_client.create_task(
+        task_id = bot.database_client.create_task(
             telegram_id, task_text, task_date, task_time_text
         )
 
@@ -28,7 +32,7 @@ class TaskTimeHandler(Handler):
 
         bot.telegram_client.sendMessage(
             chat_id=chat_id,
-            text="Готово! Задача создана.",
+            text="Готово! Задача создана:",
             reply_markup=json.dumps(
                 {
                     "keyboard": [
@@ -40,4 +44,19 @@ class TaskTimeHandler(Handler):
                 }
             ),
         )
+
+        new_task = {
+            "id": task_id,
+            "text": task_text,
+            "task_date": task_date,
+            "task_time": task_time_text,
+        }
+
+        card_text = format_task_card_text(new_task)
+        card_markup = get_task_card_reply_markup(task_id)
+
+        bot.telegram_client.sendMessage(
+            chat_id=chat_id, text=card_text, reply_markup=card_markup
+        )
+
         return HandlerStatus.STOP
