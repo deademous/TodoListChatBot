@@ -5,6 +5,10 @@ from bot.handlers.state_handlers.message_start import MessageStart
 from bot.handlers.state_handlers.task_name_handler import TaskNameHandler
 from bot.handlers.menu_handlers.message_add_task import MessageAddTask
 from bot.handlers.menu_handlers.message_show_tasks import MessageShowTasks
+from bot.handlers.state_handlers.task_date_handler import TaskDateHandler
+from bot.handlers.state_handlers.task_no_time_handler import TaskNoTimeHandler
+from bot.handlers.state_handlers.task_time_handler import TaskTimeHandler
+from bot.handlers.tools.callback_query_handler import CallbackQueryHandler
 
 
 def get_handlers() -> list[Handler]:
@@ -15,4 +19,8 @@ def get_handlers() -> list[Handler]:
         MessageAddTask(),
         MessageShowTasks(),
         TaskNameHandler(),
+        TaskDateHandler(),
+        TaskTimeHandler(),
+        TaskNoTimeHandler(),
+        CallbackQueryHandler()
     ]

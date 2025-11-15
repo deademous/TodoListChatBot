@@ -7,7 +7,7 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 
 class MessageAddTask(Handler):
 
-    def can_handle(self, update: dict, state: str) -> bool:
+    def can_handle(self, update: dict, state: str, data_json: dict) -> bool:
         return (
             state is None
             and "message" in update
@@ -15,7 +15,7 @@ class MessageAddTask(Handler):
             and update["message"]["text"] == "➕ Добавить задачу"
         )
 
-    def handle(self, update: dict, state: str) -> HandlerStatus:
+    def handle(self, update: dict, state: str, data_json: dict) -> HandlerStatus:
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 

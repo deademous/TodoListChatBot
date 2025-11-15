@@ -1,12 +1,19 @@
-from bot.database_client import ensure_user_exists
+import bot.database_client
 from bot.handlers.tools.handler import Handler, HandlerStatus
 
-
 class EnsureUserExists(Handler):
-    def can_handle(self, update: dict, state: str) -> bool:
-        return "message" in update and "from" in update["message"]
+    def _get_telegram_id(self, update: dict) -> int | None:
+        if "message" in update:
+            return update["message"]["from"]["id"]
+        elif "callback_query" in update:
+            return update["callback_query"]["from"]["id"]
+        return None
 
-    def handle(self, update: dict, state: str) -> HandlerStatus:
-        telegram_id = update["message"]["from"]["id"]
-        ensure_user_exists(telegram_id)
+    def can_handle(self, update: dict, state: str, data_json: dict) -> bool:
+        return self._get_telegram_id(update) is not None
+    
+    def handle(self, update: dict, state: str, data_json: dict) -> HandlerStatus:
+        telegram_id = self._get_telegram_id(update)
+        if telegram_id:
+            bot.database_client.ensure_user_exists(telegram_id)
         return HandlerStatus.CONTINUE

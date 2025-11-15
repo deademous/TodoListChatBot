@@ -46,3 +46,12 @@ def answerCallbackQuery(callback_query_id: str, **kwargs) -> dict:
     return makeRequest(
         "answerCallbackQuery", callback_query_id=callback_query_id, **kwargs
     )
+
+def editMessageText(chat_id: int, message_id: int, text: str, **params) -> dict:
+    return makeRequest(
+        "editMessageText", 
+        chat_id=chat_id, 
+        message_id=message_id, 
+        text=text, 
+        **params
+    )
