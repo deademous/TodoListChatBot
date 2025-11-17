@@ -1,11 +1,19 @@
-import bot.telegram_client
-import bot.database_client
+import json
 from bot.handlers.tools.handler import Handler, HandlerStatus
-
+from bot.domain.messenger import Messenger
+from bot.domain.storage import Storage
+from bot.interface.keyboards import REMOVE_KEYBOARD
 
 class MessageAddTask(Handler):
 
-    def can_handle(self, update: dict, state: str, data_json: dict) -> bool:
+    def can_handle(
+        self,
+        update: dict,
+        state: str,
+        data_json: dict,
+        storage: Storage,
+        messenger: Messenger,
+    ) -> bool:
         return (
             state is None
             and "message" in update
@@ -13,13 +21,25 @@ class MessageAddTask(Handler):
             and update["message"]["text"] == "➕ Добавить задачу"
         )
 
-    def handle(self, update: dict, state: str, data_json: dict) -> HandlerStatus:
+    def handle(
+        self,
+        update: dict,
+        state: str,
+        data_json: dict,
+        storage: Storage,
+        messenger: Messenger,
+    ) -> HandlerStatus:
+
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 
-        bot.database_client.update_user_state(telegram_id, "WAIT_TASK_NAME")
+        storage.update_user_state(telegram_id, "WAIT_TASK_NAME")
 
-        bot.telegram_client.sendMessage(
-            chat_id=chat_id, text="Напишите, что нужно сделать:"
+        reply_markup = REMOVE_KEYBOARD
+
+        messenger.send_message(
+            chat_id=chat_id,
+            text="Напишите, что нужно сделать:",
+            reply_markup=reply_markup,
         )
         return HandlerStatus.STOP

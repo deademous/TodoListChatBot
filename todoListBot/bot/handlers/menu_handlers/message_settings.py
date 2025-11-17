@@ -1,12 +1,20 @@
 import json
-import bot.telegram_client
-import bot.database_client
 from bot.handlers.tools.handler import Handler, HandlerStatus
+from bot.domain.messenger import Messenger
+from bot.domain.storage import Storage
+from bot.interface.keyboards import SETTINGS_KEYBOARD
 
 
 class MessageSettings(Handler):
 
-    def can_handle(self, update: dict, state: str, data_json: dict) -> bool:
+    def can_handle(
+        self,
+        update: dict,
+        state: str,
+        data_json: dict,
+        storage: Storage,
+        messenger: Messenger,
+    ) -> bool:
         return (
             state is None
             and "message" in update
@@ -17,11 +25,19 @@ class MessageSettings(Handler):
             )
         )
 
-    def handle(self, update: dict, state: str, data_json: dict) -> HandlerStatus:
+    def handle(
+        self,
+        update: dict,
+        state: str,
+        data_json: dict,
+        storage: Storage,
+        messenger: Messenger,
+    ) -> HandlerStatus:
+
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 
-        settings = bot.database_client.get_user_settings(telegram_id)
+        settings = storage.get_user_settings(telegram_id)
         current_morning = settings.get("morning_digest_time", "09:00")
         current_evening = settings.get("evening_review_time", "21:00")
 
@@ -31,19 +47,10 @@ class MessageSettings(Handler):
             f"• Вечерний обзор: `{current_evening}`"
         )
 
-        inline_keyboard = json.dumps(
-            {
-                "inline_keyboard": [
-                    [{"text": "☀️ Изменить утро", "callback_data": "set_morning"}],
-                    [{"text": "🌙 Изменить вечер", "callback_data": "set_evening"}],
-                ]
-            }
-        )
-
-        bot.telegram_client.sendMessage(
+        messenger.send_message(
             chat_id=chat_id,
             text=text,
             parse_mode="Markdown",
-            reply_markup=inline_keyboard,
+            reply_markup=SETTINGS_KEYBOARD,
         )
         return HandlerStatus.STOP
