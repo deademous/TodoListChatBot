@@ -8,7 +8,9 @@ from bot.handlers.menu_handlers.message_show_tasks import MessageShowTasks
 from bot.handlers.state_handlers.task_date_handler import TaskDateHandler
 from bot.handlers.state_handlers.task_no_time_handler import TaskNoTimeHandler
 from bot.handlers.state_handlers.task_time_handler import TaskTimeHandler
-from bot.handlers.tools.callback_query_handler import CallbackQueryHandler
+from bot.handlers.tools.show_tasks_callback_handler import ShowTasksCallbackHandler
+from bot.handlers.tools.settings_callback_handler import SettingsCallbackHandler
+from bot.handlers.tools.task_action_callback_handler import TaskActionCallbackHandler
 from bot.handlers.menu_handlers.message_settings import MessageSettings
 from bot.handlers.menu_handlers.message_help import MessageHelp
 from bot.handlers.state_handlers.settings_time_handler import SettingsTimeHandler
@@ -30,5 +32,7 @@ def get_handlers() -> list[Handler]:
         TaskNoTimeHandler(),
         SettingsTimeHandler(),
         PostponeHandler(),
-        CallbackQueryHandler(),
+        ShowTasksCallbackHandler(),
+        SettingsCallbackHandler(),
+        TaskActionCallbackHandler(),
     ]
