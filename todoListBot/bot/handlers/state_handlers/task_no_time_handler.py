@@ -1,4 +1,3 @@
-import json
 from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
@@ -55,7 +54,7 @@ class TaskNoTimeHandler(Handler):
         messenger.send_message(
             chat_id=chat_id,
             text="Вы в главном меню.",
-            reply_markup = MAIN_MENU_KEYBOARD,
+            reply_markup=MAIN_MENU_KEYBOARD,
         )
 
         new_task = {

@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from bot.domain.storage import Storage 
-from bot.domain.messenger import Messenger 
+from bot.domain.storage import Storage
+from bot.domain.messenger import Messenger
+
 
 class HandlerStatus(Enum):
     CONTINUE = 1
     STOP = 2
+
 
 class Handler(ABC):
     @abstractmethod

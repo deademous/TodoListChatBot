@@ -14,20 +14,20 @@ MAIN_MENU_KEYBOARD = json.dumps(
 REMOVE_KEYBOARD = json.dumps({"remove_keyboard": True})
 
 SETTINGS_KEYBOARD = json.dumps(
-            {
-                "inline_keyboard": [
-                    [{"text": "☀️ Изменить утро", "callback_data": "set_morning"}],
-                    [{"text": "🌙 Изменить вечер", "callback_data": "set_evening"}],
-                ]
-            }
-        )
+    {
+        "inline_keyboard": [
+            [{"text": "☀️ Изменить утро", "callback_data": "set_morning"}],
+            [{"text": "🌙 Изменить вечер", "callback_data": "set_evening"}],
+        ]
+    }
+)
 
 TASK_DATE_KEYBOARD = json.dumps(
-            {
-                "inline_keyboard": [
-                    [{"text": "Сегодня", "callback_data": "set_date_today"}],
-                    [{"text": "Завтра", "callback_data": "set_date_tomorrow"}],
-                    [{"text": "Без даты", "callback_data": "set_date_nodate"}],
-                ]
-            }
-        )
+    {
+        "inline_keyboard": [
+            [{"text": "Сегодня", "callback_data": "set_date_today"}],
+            [{"text": "Завтра", "callback_data": "set_date_tomorrow"}],
+            [{"text": "Без даты", "callback_data": "set_date_nodate"}],
+        ]
+    }
+)

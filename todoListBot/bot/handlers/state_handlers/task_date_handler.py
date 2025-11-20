@@ -6,7 +6,7 @@ from bot.domain.storage import Storage
 
 
 class TaskDateHandler(Handler):
-    
+
     def can_handle(
         self,
         update: dict,
@@ -16,9 +16,9 @@ class TaskDateHandler(Handler):
         messenger: Messenger,
     ) -> bool:
         return (
-            state == "WAIT_TASK_DATE" and 
-            "callback_query" in update and 
-            update["callback_query"]["data"].startswith("set_date_")
+            state == "WAIT_TASK_DATE"
+            and "callback_query" in update
+            and update["callback_query"]["data"].startswith("set_date_")
         )
 
     def handle(
@@ -29,7 +29,7 @@ class TaskDateHandler(Handler):
         storage: Storage,
         messenger: Messenger,
     ) -> HandlerStatus:
-        
+
         telegram_id = update["callback_query"]["from"]["id"]
         chat_id = update["callback_query"]["message"]["chat"]["id"]
         message_id = update["callback_query"]["message"]["message_id"]
@@ -37,28 +37,32 @@ class TaskDateHandler(Handler):
 
         messenger.answer_callback_query(update["callback_query"]["id"])
 
-        today = datetime.now().strftime('%Y-%m-%d')
-        tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
+        today = datetime.now().strftime("%Y-%m-%d")
+        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
         date_map = {
             "set_date_today": today,
             "set_date_tomorrow": tomorrow,
-            "set_date_nodate": None
+            "set_date_nodate": None,
         }
         task_date = date_map.get(callback_data)
-        
+
         data_json["date"] = task_date
         storage.update_user_data(telegram_id, data_json)
         storage.update_user_state(telegram_id, "WAIT_TASK_TIME")
-        
-        inline_keyboard = json.dumps({
-            "inline_keyboard": [[{"text": "⏰ Без времени", "callback_data": "set_time_notime"}]]
-        })
-        
+
+        inline_keyboard = json.dumps(
+            {
+                "inline_keyboard": [
+                    [{"text": "⏰ Без времени", "callback_data": "set_time_notime"}]
+                ]
+            }
+        )
+
         messenger.edit_message_text(
-            chat_id = chat_id,
-            message_id = message_id,
-            text = "Хорошо. Укажите время (в формате ЧЧ:ММ) или нажмите 'Без времени'",
-            reply_markup = inline_keyboard
+            chat_id=chat_id,
+            message_id=message_id,
+            text="Хорошо. Укажите время (в формате ЧЧ:ММ) или нажмите 'Без времени'",
+            reply_markup=inline_keyboard,
         )
         return HandlerStatus.STOP

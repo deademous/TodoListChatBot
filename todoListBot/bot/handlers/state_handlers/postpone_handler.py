@@ -1,4 +1,3 @@
-import json
 from datetime import datetime, timedelta
 import re
 from bot.handlers.tools.handler import Handler, HandlerStatus

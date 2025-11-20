@@ -1,15 +1,8 @@
-import json
-import re
 from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
-
-
-def is_valid_time(time_str: str) -> bool:
-    if re.fullmatch(r"([01]\d|2[0-3]):([0-5]\d)", time_str):
-        return True
-    return False
+from bot.handlers.tools.time_parser import normalize_time
 
 
 class SettingsTimeHandler(Handler):
@@ -41,10 +34,12 @@ class SettingsTimeHandler(Handler):
         chat_id = update["message"]["chat"]["id"]
         new_time = update["message"]["text"]
 
-        if not is_valid_time(new_time):
+        normalized_time = normalize_time(new_time)
+
+        if not normalized_time:
             messenger.send_message(
                 chat_id,
-                "Неверный формат. Пожалуйста, введите время в формате ЧЧ:ММ (например, 08:30).",
+                "Неверный формат. Введите время, например: '08:30', '9:00' или '21.00'.",
             )
             return HandlerStatus.STOP
 
@@ -55,13 +50,13 @@ class SettingsTimeHandler(Handler):
             setting_type = "evening_review_time"
             setting_name = "вечернего обзора"
 
-        storage.update_user_setting_time(telegram_id, setting_type, new_time)
+        storage.update_user_setting_time(telegram_id, setting_type, normalized_time)
         storage.clear_user_state_and_temp_data(telegram_id)
 
         messenger.send_message(
             chat_id=chat_id,
-            text=f"✅ Готово! Время для {setting_name} обновлено на {new_time}.",
-            reply_markup = MAIN_MENU_KEYBOARD,
+            text=f"✅ Готово! Время для {setting_name} обновлено на {normalized_time}.",
+            reply_markup=MAIN_MENU_KEYBOARD,
         )
 
         return HandlerStatus.STOP

@@ -27,7 +27,7 @@ class Dispatcher:
 
         user_state = user.get("state") if user else None
         data_json_str = user.get("data_json") if user else "{}"
-        
+
         if data_json_str is None:
             data_json_str = "{}"
 
