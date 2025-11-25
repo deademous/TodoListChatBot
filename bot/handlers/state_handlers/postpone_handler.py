@@ -77,7 +77,7 @@ class PostponeHandler(Handler):
                     target_date = datetime(now.year, month, day)
                     new_date = target_date.strftime("%Y-%m-%d")
                     new_time = parts[1] if len(parts) > 1 else None
-                except:
+                except ValueError:
                     new_date = None
                     new_time = None
 
