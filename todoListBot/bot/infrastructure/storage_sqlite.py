@@ -233,6 +233,80 @@ class StorageSqlite(Storage):
 
     def mark_task_as_notified(self, task_id: int) -> None:
         with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
-            connection.execute(
-                "UPDATE tasks SET notified = 1 WHERE id = ?", (task_id,)
+            connection.execute("UPDATE tasks SET notified = 1 WHERE id = ?", (task_id,))
+
+    def get_users_for_time_check(
+        self, setting_type: str, current_time: str
+    ) -> list[dict]:
+        if setting_type not in ("morning_digest_time", "evening_review_time"):
+            return []
+
+        with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+            connection.row_factory = sqlite3.Row
+            cursor = connection.execute(
+                f"""
+                SELECT t1.telegram_id, t2.{setting_type} AS setting_time
+                FROM users t1
+                JOIN user_settings t2 ON t1.telegram_id = t2.telegram_id
+                WHERE t2.{setting_type} = ?
+                """,
+                (current_time,),
             )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_active_tasks_for_digest(
+        self, telegram_id: int, today_date: str
+    ) -> list[dict]:
+        with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+            connection.row_factory = sqlite3.Row
+            cursor = connection.execute(
+                """
+                SELECT id, text, task_date, task_time, status
+                FROM tasks
+                WHERE telegram_id = ? 
+                  AND status = 'active'
+                  AND (task_date = ? OR task_date IS NULL)
+                ORDER BY CASE WHEN task_date IS NULL THEN 1 ELSE 0 END, 
+                         task_time ASC, 
+                         id ASC
+                """,
+                (telegram_id, today_date),
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_tasks_for_tomorrow(
+        self, telegram_id: int, tomorrow_date: str
+    ) -> list[dict]:
+        with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+            connection.row_factory = sqlite3.Row
+            cursor = connection.execute(
+                """
+                SELECT id, text, task_date, task_time, status
+                FROM tasks
+                WHERE telegram_id = ? 
+                  AND status = 'active'
+                  AND task_date = ?
+                ORDER BY task_time ASC, id ASC
+                """,
+                (telegram_id, tomorrow_date),
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_users_for_scheduled_notifications(
+        self, current_time: str, setting_type: str
+    ) -> list[dict]:
+        if setting_type not in ("morning_digest_time", "evening_review_time"):
+            return []
+
+        with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+            connection.row_factory = sqlite3.Row
+            cursor = connection.execute(
+                f"""
+                SELECT t1.telegram_id
+                FROM users AS t1
+                JOIN user_settings AS t2 ON t1.telegram_id = t2.telegram_id
+                WHERE t2.{setting_type} = ?
+                """,
+                (current_time,),
+            )
+            return [dict(row) for row in cursor.fetchall()]

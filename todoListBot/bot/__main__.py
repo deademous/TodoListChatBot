@@ -16,17 +16,15 @@ def main() -> None:
 
         dispatcher = Dispatcher(storage, messenger)
         dispatcher.add_handlers(*get_handlers())
-        
+
         notifier_thread = threading.Thread(
-            target=start_notifier, 
-            args=(storage, messenger), 
-            daemon=True
+            target=start_notifier, args=(storage, messenger), daemon=True
         )
         notifier_thread.start()
-        
+
         print("Starting Long Polling...")
         start_long_polling(dispatcher, messenger)
-        
+
     except KeyboardInterrupt:
         print("\nBye!")
 
