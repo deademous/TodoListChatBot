@@ -17,7 +17,9 @@ class StorageSqlite(Storage):
             print(f"Файл БД не найден по пути {self._db_path}, создаю новый...")
             self.recreate_database()
 
-    def recreate_database(self) -> None:
+    @staticmethod
+    def recreate_database() -> None:
+        load_dotenv()
         connection = sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH"))
         with connection:
             connection.execute("DROP TABLE IF EXISTS telegram_updates")
@@ -53,6 +55,7 @@ class StorageSqlite(Storage):
                     task_date TEXT DEFAULT NULL,
                     task_time TEXT DEFAULT NULL,
                     status TEXT NOT NULL DEFAULT 'active',
+                    notified BOOLEAN DEFAULT 0,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (telegram_id) REFERENCES users (telegram_id)
                 )
@@ -139,7 +142,10 @@ class StorageSqlite(Storage):
     ) -> int:
         with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
             cursor = connection.execute(
-                "INSERT INTO tasks (telegram_id, text, task_date, task_time) VALUES (?, ?, ?, ?)",
+                """
+                INSERT INTO tasks (telegram_id, text, task_date, task_time, status, notified)
+                VALUES (?, ?, ?, ?, 'active', 0)
+                """,
                 (telegram_id, text, task_date, task_time),
             )
             return cursor.lastrowid
@@ -207,3 +213,26 @@ class StorageSqlite(Storage):
             cursor = connection.execute("SELECT * FROM tasks WHERE id = ?", (task_id,))
             result = cursor.fetchone()
             return dict(result) if result else None
+
+    def get_due_tasks(self, current_date: str, current_time: str) -> list[dict]:
+        with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+            connection.row_factory = sqlite3.Row
+            cursor = connection.execute(
+                """
+                SELECT t.*, t.telegram_id AS chat_id FROM tasks t
+                WHERE t.status = 'active'
+                AND t.task_date IS NOT NULL
+                AND t.task_time IS NOT NULL
+                AND t.notified = 0
+                AND (t.task_date < ? OR (t.task_date = ? AND t.task_time <= ?))
+                ORDER BY t.task_date ASC, t.task_time ASC
+                """,
+                (current_date, current_date, current_time),
+            )
+            return [dict(row) for row in cursor.fetchall()]
+
+    def mark_task_as_notified(self, task_id: int) -> None:
+        with sqlite3.connect(os.getenv("SQLITE_DATABASE_PATH")) as connection:
+            connection.execute(
+                "UPDATE tasks SET notified = 1 WHERE id = ?", (task_id,)
+            )

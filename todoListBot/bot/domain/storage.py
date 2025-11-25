@@ -38,3 +38,9 @@ class Storage(ABC):
     def update_user_setting_time(
         self, telegram_id: int, setting_type: str, new_time: str
     ) -> None: ...
+
+    @abstractmethod
+    def get_due_tasks(self, current_date: str, current_time: str) -> list[dict]: ...
+
+    @abstractmethod
+    def mark_task_as_notified(self, task_id: int) -> None: ...
