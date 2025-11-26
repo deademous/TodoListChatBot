@@ -42,7 +42,7 @@ class TaskActionCallbackHandler(Handler):
             return HandlerStatus.STOP
 
         if action == "task_postpone":
-            storage.update_temp_data(telegram_id, {"postpone_task_id": task_id})
+            storage.update_user_data(telegram_id, {"postpone_task_id": task_id})
             storage.update_user_state(telegram_id, "WAIT_POSTPONE_TIME")
 
             messenger.delete_message(chat_id=chat_id, message_id=message_id)
