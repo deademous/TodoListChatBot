@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
-import re
 from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.handlers.tools.task_card import format_task_card_text
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
+from bot.handlers.tools.time_parser import normalize_time
 
 
 class PostponeHandler(Handler):
@@ -29,15 +29,16 @@ class PostponeHandler(Handler):
     ) -> HandlerStatus:
 
         telegram_id = None
-        callback_data = None
         chat_id = None
 
         postpone_task_id = data_json.get("postpone_task_id")
 
         if "message" in update:
             telegram_id = update["message"]["from"]["id"]
+            chat_id = update["message"]["chat"]["id"]
         elif "callback_query" in update:
             telegram_id = update["callback_query"]["from"]["id"]
+            chat_id = update["callback_query"]["message"]["chat"]["id"]
 
         if not postpone_task_id:
             if telegram_id:
@@ -49,51 +50,22 @@ class PostponeHandler(Handler):
         now = datetime.now()
 
         if "message" in update:
-            telegram_id = update["message"]["from"]["id"]
-            chat_id = update["message"]["chat"]["id"]
-            input_text = update["message"]["text"].lower().strip()
+            text = update["message"]["text"].strip()
 
-            if "завтра" in input_text:
-                new_date = (now + timedelta(days=1)).strftime("%Y-%m-%d")
-                time_match = re.search(r"(\d{1,2}:\d{2})", input_text)
-                new_time = time_match.group(1) if time_match else None
-            elif re.search(r"(\d+)\s*(ч|h)", input_text):
-                match = re.search(r"(\d+)\s*(ч|h)", input_text)
-                hours = int(match.group(1))
-                new_datetime = now + timedelta(hours=hours)
-                new_date = new_datetime.strftime("%Y-%m-%d")
-                new_time = new_datetime.strftime("%H:%M")
-            elif re.search(r"(\d+)\s*(м|min)", input_text):
-                match = re.search(r"(\d+)\s*(м|min)", input_text)
-                minutes = int(match.group(1))
-                new_datetime = now + timedelta(minutes=minutes)
-                new_date = new_datetime.strftime("%Y-%m-%d")
-                new_time = new_datetime.strftime("%H:%M")
-            elif re.match(r"\d{1,2}\.\d{1,2}", input_text):
-                try:
-                    parts = input_text.split()
-                    date_part = parts[0]
-                    day, month = map(int, date_part.split("."))
-                    target_date = datetime(now.year, month, day)
-                    new_date = target_date.strftime("%Y-%m-%d")
-                    new_time = parts[1] if len(parts) > 1 else None
-                except ValueError:
-                    new_date = None
-                    new_time = None
+            normalized_time = normalize_time(text)
 
-            if not new_date:
+            if normalized_time:
+                new_date = now.strftime("%Y-%m-%d")
+                new_time = normalized_time
+            else:
                 messenger.send_message(
-                    chat_id=chat_id,
-                    text="Не удалось распознать дату/время. Попробуйте формат 'завтра 18:00', '1ч' или '25.12'.",
+                    chat_id,
+                    "Неверный формат. Введите время, например: '08:30', '9:00' или '21.00'.",
                 )
                 return HandlerStatus.STOP
 
         elif "callback_query" in update:
-            telegram_id = update["callback_query"]["from"]["id"]
-            chat_id = update["callback_query"]["message"]["chat"]["id"]
             callback_data = update["callback_query"]["data"]
-
-            messenger.answer_callback_query(update["callback_query"]["id"])
 
             if not callback_data.startswith("postpone:"):
                 return HandlerStatus.STOP
@@ -123,7 +95,11 @@ class PostponeHandler(Handler):
             )
             storage.clear_user_state_and_temp_data(telegram_id)
             updated_task = storage.get_task_by_id(postpone_task_id)
-            response_text = f"✅ Задача успешно отложена на {new_date} в {new_time or 'любое время'}."
+
+            time_display = new_time if new_time else "любое время"
+            response_text = (
+                f"✅ Задача успешно отложена на {new_date} в {time_display}."
+            )
 
             if updated_task:
                 card_text = format_task_card_text(updated_task)
@@ -136,4 +112,4 @@ class PostponeHandler(Handler):
             )
             return HandlerStatus.STOP
 
-        return HandlerStatus.CONTINUE
+        return HandlerStatus.STOP
