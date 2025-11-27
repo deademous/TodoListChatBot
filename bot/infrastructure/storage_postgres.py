@@ -180,8 +180,8 @@ class StoragePostgres(Storage):
                     (telegram_id, text, task_date, task_time),
                 )
                 result = cursor.fetchone()
-                return result[0] if result else 0
             conn.commit()
+            return result[0] if result else 0
 
     def get_tasks_by_filter(self, telegram_id: int, filter_type: str) -> list[dict]:
         with self._get_connection() as conn:
