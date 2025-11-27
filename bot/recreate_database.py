@@ -1,4 +1,4 @@
-from bot.infrastructure.storage_sqlite import StorageSqlite
+from bot.infrastructure.storage_postgres import StoragePostgres
 
 
-StorageSqlite.recreate_database()
+StoragePostgres.recreate_database()
