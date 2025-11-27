@@ -76,7 +76,7 @@ def test_task_action_postpone_start():
     def get_user(telegram_id: int) -> dict | None:
         return {"state": None, "data_json": "{}"}
 
-    def update_temp_data(telegram_id: int, data: dict) -> None:
+    def update_user_data(telegram_id: int, data: dict) -> None:
         assert data == {"postpone_task_id": 66}
         nonlocal update_data_called
         update_data_called = True
@@ -101,7 +101,7 @@ def test_task_action_postpone_start():
     mock_storage = Mock(
         {
             "get_user": get_user,
-            "update_temp_data": update_temp_data,
+            "update_user_data": update_user_data,
             "update_user_state": update_user_state,
         }
     )
