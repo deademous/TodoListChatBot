@@ -11,7 +11,7 @@ class StoragePostgres(Storage):
         load_dotenv()
 
         host = os.getenv("POSTGRES_HOST")
-        port = os.getenv("POSTGRES_PORT")
+        port = os.getenv("POSTGRES_HOST_PORT")
         user = os.getenv("POSTGRES_USER")
         password = os.getenv("POSTGRES_PASSWORD")
         database = os.getenv("POSTGRES_DATABASE")
@@ -32,7 +32,7 @@ class StoragePostgres(Storage):
     def recreate_database() -> None:
         load_dotenv()
         host = os.getenv("POSTGRES_HOST")
-        port = int(os.getenv("POSTGRES_PORT"))
+        port = int(os.getenv("POSTGRES_HOST_PORT"))
         user = os.getenv("POSTGRES_USER")
         password = os.getenv("POSTGRES_PASSWORD")
         database = os.getenv("POSTGRES_DATABASE")
@@ -163,12 +163,16 @@ class StoragePostgres(Storage):
             with conn.cursor() as cursor:
                 cursor.execute(
                     "UPDATE users SET data_json = %s WHERE telegram_id = %s",
-                    (json.dumps(existing_data, ensure_ascii=False, indent=2), telegram_id),
+                    (
+                        json.dumps(existing_data, ensure_ascii=False, indent=2),
+                        telegram_id,
+                    ),
                 )
             conn.commit()
 
-    def create_task(self, telegram_id: int, text: str, task_date: str | None, task_time: str | None
-) -> int:
+    def create_task(
+        self, telegram_id: int, text: str, task_date: str | None, task_time: str | None
+    ) -> int:
         with self._get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
@@ -283,7 +287,9 @@ class StoragePostgres(Storage):
     def mark_task_as_notified(self, task_id: int) -> None:
         with self._get_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("UPDATE tasks SET notified = TRUE WHERE id = %s", (task_id,))
+                cursor.execute(
+                    "UPDATE tasks SET notified = TRUE WHERE id = %s", (task_id,)
+                )
             conn.commit()
 
     def get_users_for_time_check(
@@ -328,7 +334,6 @@ class StoragePostgres(Storage):
                 columns = [col[0] for col in cursor.description]
                 return [dict(zip(columns, row)) for row in cursor.fetchall()]
             conn.commit()
-
 
     def get_tasks_for_tomorrow(
         self, telegram_id: int, tomorrow_date: str
