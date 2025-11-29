@@ -7,7 +7,6 @@ from bot.handlers.tools.task_card import (
 )
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
 from bot.handlers.tools.time_parser import normalize_time
-import asyncio
 
 
 class TaskTimeHandler(Handler):

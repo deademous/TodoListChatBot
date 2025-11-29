@@ -1,12 +1,12 @@
 from bot.dispatcher import Dispatcher
 from bot.handlers import get_handlers
-from bot.long_polling import start_long_polling
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.infrastructure.messenger_telegram import MessengerTelegram
 from bot.infrastructure.storage_postgres import StoragePostgres
 from bot.notifier import start_notifier
 import threading
+import bot.long_polling
 import asyncio
 
 

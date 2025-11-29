@@ -45,7 +45,9 @@ class MessengerTelegram(Messenger):
 
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
-            logger.error(f"[HTTP] ✗ POST {method} failed - {duration_ms:.2f}ms - Error: {e}")
+            logger.error(
+                f"[HTTP] ✗ POST {method} failed - {duration_ms:.2f}ms - Error: {e}"
+            )
             raise
 
     async def close(self) -> None:
@@ -55,19 +57,37 @@ class MessengerTelegram(Messenger):
 
     # Методы Telegram API
     async def send_message(self, chat_id: int, text: str, **params) -> dict:
-        return await self._make_request("sendMessage", chat_id=chat_id, text=text, **params)
+        return await self._make_request(
+            "sendMessage", chat_id=chat_id, text=text, **params
+        )
 
     async def get_updates(self, **params) -> list:
         return await self._make_request("getUpdates", **params)
 
     async def delete_message(self, chat_id: int, message_id: int) -> dict:
-        return await self._make_request("deleteMessage", chat_id=chat_id, message_id=message_id)
+        return await self._make_request(
+            "deleteMessage", chat_id=chat_id, message_id=message_id
+        )
 
     async def answer_callback_query(self, callback_query_id: str, **params) -> dict:
-        return await self._make_request("answerCallbackQuery", callback_query_id=callback_query_id, **params)
+        return await self._make_request(
+            "answerCallbackQuery", callback_query_id=callback_query_id, **params
+        )
 
-    async def edit_message_text(self, chat_id: int, message_id: int, text: str, **params) -> dict:
-        return await self._make_request("editMessageText", chat_id=chat_id, message_id=message_id, text=text, **params)
+    async def edit_message_text(
+        self, chat_id: int, message_id: int, text: str, **params
+    ) -> dict:
+        return await self._make_request(
+            "editMessageText",
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text,
+            **params,
+        )
 
-    async def edit_message_reply_markup(self, chat_id: int, message_id: int, **params) -> dict:
-        return await self._make_request("editMessageReplyMarkup", chat_id=chat_id, message_id=message_id, **params)
+    async def edit_message_reply_markup(
+        self, chat_id: int, message_id: int, **params
+    ) -> dict:
+        return await self._make_request(
+            "editMessageReplyMarkup", chat_id=chat_id, message_id=message_id, **params
+        )

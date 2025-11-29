@@ -3,7 +3,6 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.handlers.tools.task_card import format_task_card_text
-import asyncio
 
 
 class TaskActionCallbackHandler(Handler):

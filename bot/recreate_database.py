@@ -1,6 +1,7 @@
 import asyncio
 from bot.infrastructure.storage_postgres import StoragePostgres
 
+
 async def main():
     await StoragePostgres().recreate_database()
 

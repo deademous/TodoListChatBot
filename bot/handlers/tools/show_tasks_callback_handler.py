@@ -5,7 +5,6 @@ from bot.handlers.tools.task_card import (
     format_task_card_text,
     get_task_card_reply_markup,
 )
-import asyncio
 
 
 class ShowTasksCallbackHandler(Handler):

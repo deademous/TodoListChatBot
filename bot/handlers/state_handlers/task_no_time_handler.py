@@ -6,7 +6,6 @@ from bot.handlers.tools.task_card import (
     get_task_card_reply_markup,
 )
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
-import asyncio
 
 
 class TaskNoTimeHandler(Handler):

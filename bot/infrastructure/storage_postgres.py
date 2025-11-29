@@ -182,36 +182,6 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-    async def update_user_data(self, telegram_id: int, new_data: dict) -> None:
-        method_name = "update_user_data"
-        start_time = time.time()
-        logger.info(f"[DB] → {method_name} - UPDATE users SET data_json")
-
-        user = await self.get_user(telegram_id)
-        if user is None:
-            duration_ms = (time.time() - start_time) * 1000
-            logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms (user not found)")
-            return
-
-        existing_data_str = user.get("data_json")
-        existing_data = json.loads(existing_data_str) if existing_data_str else {}
-        existing_data.update(new_data)
-
-        try:
-            pool = await self._get_pool()
-            async with pool.acquire() as conn:
-                await conn.execute(
-                    "UPDATE users SET data_json=$1 WHERE telegram_id=$2",
-                    json.dumps(existing_data, ensure_ascii=False, indent=2),
-                    telegram_id,
-                )
-            duration_ms = (time.time() - start_time) * 1000
-            logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")
-        except Exception as e:
-            duration_ms = (time.time() - start_time) * 1000
-            logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
-            raise
-
     async def clear_user_state_and_temp_data(self, telegram_id: int) -> None:
         method_name = "clear_user_state_and_temp_data"
         start_time = time.time()
@@ -231,7 +201,6 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-
     async def update_user_state(self, telegram_id: int, state: str | None) -> None:
         method_name = "update_user_state"
         start_time = time.time()
@@ -247,31 +216,6 @@ class StoragePostgres(Storage):
                 )
             duration_ms = (time.time() - start_time) * 1000
             logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")
-        except Exception as e:
-            duration_ms = (time.time() - start_time) * 1000
-            logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
-            raise
-
-    async def get_user(self, telegram_id: int) -> dict | None:
-        method_name = "get_user"
-        start_time = time.time()
-        logger.info(f"[DB] → {method_name}")
-
-        try:
-            pool = await self._get_pool()
-            async with pool.acquire() as conn:
-                row = await conn.fetchrow(
-                    "SELECT id, telegram_id, state, data_json FROM users WHERE telegram_id=$1",
-                    telegram_id,
-                )
-                if row:
-                    result = dict(row)
-                    duration_ms = (time.time() - start_time) * 1000
-                    logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")
-                    return result
-                duration_ms = (time.time() - start_time) * 1000
-                logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms (no result)")
-                return None
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
@@ -306,7 +250,9 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-    async def create_task(self, telegram_id: int, text: str, task_date: str | None, task_time: str | None) -> int:
+    async def create_task(
+        self, telegram_id: int, text: str, task_date: str | None, task_time: str | None
+    ) -> int:
         method_name = "create_task"
         start_time = time.time()
         logger.info(f"[DB] → {method_name}")
@@ -320,7 +266,10 @@ class StoragePostgres(Storage):
                     VALUES ($1,$2,$3,$4,'active',FALSE)
                     RETURNING id
                     """,
-                    telegram_id, text, task_date, task_time,
+                    telegram_id,
+                    text,
+                    task_date,
+                    task_time,
                 )
             duration_ms = (time.time() - start_time) * 1000
             logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")
@@ -330,7 +279,9 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-   async def get_tasks_by_filter(self, telegram_id: int, filter_type: str) -> list[dict]:
+    async def get_tasks_by_filter(
+        self, telegram_id: int, filter_type: str
+    ) -> list[dict]:
         method_name = "get_tasks_by_filter"
         start_time = time.time()
         logger.info(f"[DB] → {method_name} - filter={filter_type}")
@@ -353,7 +304,9 @@ class StoragePostgres(Storage):
                 rows = await conn.fetch(query, telegram_id)
             result = [dict(r) for r in rows]
             duration_ms = (time.time() - start_time) * 1000
-            logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)")
+            logger.info(
+                f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)"
+            )
             return result
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
@@ -383,7 +336,9 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-    async def update_user_setting_time(self, telegram_id: int, setting_type: str, new_time: str) -> None:
+    async def update_user_setting_time(
+        self, telegram_id: int, setting_type: str, new_time: str
+    ) -> None:
         method_name = "update_user_setting_time"
         start_time = time.time()
         logger.info(f"[DB] → {method_name}")
@@ -397,7 +352,8 @@ class StoragePostgres(Storage):
             async with pool.acquire() as conn:
                 await conn.execute(
                     f"UPDATE user_settings SET {setting_type}=$1 WHERE telegram_id=$2",
-                    new_time, telegram_id,
+                    new_time,
+                    telegram_id,
                 )
             duration_ms = (time.time() - start_time) * 1000
             logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")
@@ -414,7 +370,9 @@ class StoragePostgres(Storage):
         try:
             pool = await self._get_pool()
             async with pool.acquire() as conn:
-                await conn.execute("UPDATE tasks SET status=$1 WHERE id=$2", new_status, task_id)
+                await conn.execute(
+                    "UPDATE tasks SET status=$1 WHERE id=$2", new_status, task_id
+                )
             duration_ms = (time.time() - start_time) * 1000
             logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")
         except Exception as e:
@@ -422,7 +380,9 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-    async def update_task(self, task_id: int, task_date: str | None, task_time: str | None, status: str) -> None:
+    async def update_task(
+        self, task_id: int, task_date: str | None, task_time: str | None, status: str
+    ) -> None:
         method_name = "update_task"
         start_time = time.time()
         logger.info(f"[DB] → {method_name}")
@@ -432,7 +392,10 @@ class StoragePostgres(Storage):
             async with pool.acquire() as conn:
                 await conn.execute(
                     "UPDATE tasks SET task_date=$1, task_time=$2, status=$3 WHERE id=$4",
-                    task_date, task_time, status, task_id,
+                    task_date,
+                    task_time,
+                    status,
+                    task_id,
                 )
             duration_ms = (time.time() - start_time) * 1000
             logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")
@@ -478,11 +441,14 @@ class StoragePostgres(Storage):
                     AND t.notified=FALSE
                     AND (t.task_date<$1 OR (t.task_date=$1 AND t.task_time<=$2))
                     """,
-                    current_date, current_time,
+                    current_date,
+                    current_time,
                 )
             result = [dict(r) for r in rows]
             duration_ms = (time.time() - start_time) * 1000
-            logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)")
+            logger.info(
+                f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)"
+            )
             return result
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
@@ -497,7 +463,9 @@ class StoragePostgres(Storage):
         try:
             pool = await self._get_pool()
             async with pool.acquire() as conn:
-                await conn.execute("UPDATE tasks SET notified=TRUE WHERE id=$1", task_id)
+                await conn.execute(
+                    "UPDATE tasks SET notified=TRUE WHERE id=$1", task_id
+                )
             duration_ms = (time.time() - start_time) * 1000
             logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms")
         except Exception as e:
@@ -505,13 +473,19 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-        async def get_users_for_time_check(self, setting_type: str, current_time: str) -> list[dict]:
+        async def get_users_for_time_check(
+            self, setting_type: str, current_time: str
+        ) -> list[dict]:
             method_name = "get_users_for_time_check"
             start_time = time.time()
-            logger.info(f"[DB] → {method_name} - Get users for {setting_type} at {current_time}")
+            logger.info(
+                f"[DB] → {method_name} - Get users for {setting_type} at {current_time}"
+            )
 
             if setting_type not in ("morning_digest_time", "evening_review_time"):
-                logger.warning(f"[DB] ✗ {method_name} - Invalid setting_type: {setting_type}")
+                logger.warning(
+                    f"[DB] ✗ {method_name} - Invalid setting_type: {setting_type}"
+                )
                 return []
 
             try:
@@ -529,18 +503,23 @@ class StoragePostgres(Storage):
 
                 result = [dict(row) for row in rows]
                 duration_ms = (time.time() - start_time) * 1000
-                logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)")
+                logger.info(
+                    f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)"
+                )
                 return result
             except Exception as e:
                 duration_ms = (time.time() - start_time) * 1000
                 logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
                 raise
 
-
-        async def get_active_tasks_for_digest(self, telegram_id: int, today_date: str) -> list[dict]:
+    async def get_active_tasks_for_digest(
+        self, telegram_id: int, today_date: str
+    ) -> list[dict]:
         method_name = "get_active_tasks_for_digest"
         start_time = time.time()
-        logger.info(f"[DB] → {method_name} - Get active tasks for digest for {telegram_id} on {today_date}")
+        logger.info(
+            f"[DB] → {method_name} - Get active tasks for digest for {telegram_id} on {today_date}"
+        )
 
         try:
             pool = await self._get_pool()
@@ -562,17 +541,23 @@ class StoragePostgres(Storage):
 
             result = [dict(row) for row in rows]
             duration_ms = (time.time() - start_time) * 1000
-            logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)")
+            logger.info(
+                f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)"
+            )
             return result
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-    async def get_tasks_for_tomorrow(self, telegram_id: int, tomorrow_date: str) -> list[dict]:
+    async def get_tasks_for_tomorrow(
+        self, telegram_id: int, tomorrow_date: str
+    ) -> list[dict]:
         method_name = "get_tasks_for_tomorrow"
         start_time = time.time()
-        logger.info(f"[DB] → {method_name} - Get tasks for tomorrow for {telegram_id} on {tomorrow_date}")
+        logger.info(
+            f"[DB] → {method_name} - Get tasks for tomorrow for {telegram_id} on {tomorrow_date}"
+        )
 
         try:
             pool = await self._get_pool()
@@ -592,20 +577,28 @@ class StoragePostgres(Storage):
 
             result = [dict(row) for row in rows]
             duration_ms = (time.time() - start_time) * 1000
-            logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)")
+            logger.info(
+                f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)"
+            )
             return result
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-    async def get_users_for_scheduled_notifications(self, current_time: str, setting_type: str) -> list[dict]:
+    async def get_users_for_scheduled_notifications(
+        self, current_time: str, setting_type: str
+    ) -> list[dict]:
         method_name = "get_users_for_scheduled_notifications"
         start_time = time.time()
-        logger.info(f"[DB] → {method_name} - Get users for scheduled notifications at {current_time} ({setting_type})")
+        logger.info(
+            f"[DB] → {method_name} - Get users for scheduled notifications at {current_time} ({setting_type})"
+        )
 
         if setting_type not in ("morning_digest_time", "evening_review_time"):
-            logger.warning(f"[DB] ✗ {method_name} - Invalid setting_type: {setting_type}")
+            logger.warning(
+                f"[DB] ✗ {method_name} - Invalid setting_type: {setting_type}"
+            )
             return []
 
         try:
@@ -623,7 +616,9 @@ class StoragePostgres(Storage):
 
             result = [dict(row) for row in rows]
             duration_ms = (time.time() - start_time) * 1000
-            logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)")
+            logger.info(
+                f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)"
+            )
             return result
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000

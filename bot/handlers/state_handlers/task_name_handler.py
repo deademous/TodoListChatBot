@@ -2,7 +2,6 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.interface.keyboards import TASK_DATE_KEYBOARD
-import asyncio
 
 
 class TaskNameHandler(Handler):

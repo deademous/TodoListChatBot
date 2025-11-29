@@ -5,7 +5,6 @@ from bot.domain.storage import Storage
 from bot.handlers.tools.task_card import format_task_card_text
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
 from bot.handlers.tools.time_parser import normalize_time
-import asyncio
 
 
 class PostponeHandler(Handler):

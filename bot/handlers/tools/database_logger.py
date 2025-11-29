@@ -1,7 +1,6 @@
 from bot.domain.storage import Storage
 from bot.domain.messenger import Messenger
 from bot.handlers.tools.handler import Handler, HandlerStatus
-import asyncio
 
 
 class DatabaseLogger(Handler):
