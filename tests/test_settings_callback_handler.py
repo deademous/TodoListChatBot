@@ -1,9 +1,12 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.tools.settings_callback_handler import SettingsCallbackHandler
 from tests.mocks import Mock
 
 
-def test_settings_callback_handler_morning():
+@pytest.mark.asyncio
+async def test_settings_callback_handler_morning():
     test_update = {
         "update_id": 2,
         "callback_query": {
@@ -14,44 +17,45 @@ def test_settings_callback_handler_morning():
         },
     }
 
-    update_state_called = False
-    send_message_called = False
+    calls = {
+        "update_state": False,
+        "send_message": False,
+    }
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
+        assert telegram_id == 456
         return {"state": None, "data_json": "{}"}
 
-    def update_user_state(telegram_id: int, state: str) -> None:
+    async def mock_update_user_state(telegram_id: int, state: str):
         assert telegram_id == 456
         assert state == "WAIT_SETTING_MORNING"
-        nonlocal update_state_called
-        update_state_called = True
+        calls["update_state"] = True
 
-    def edit_message_text(chat_id: int, message_id: int, text: str, **params) -> dict:
+    async def mock_edit_message_text(chat_id: int, message_id: int, text: str, **params):
         return {"ok": True}
 
-    def send_message(chat_id: int, text: str, **params) -> dict:
+    async def mock_send_message(chat_id: int, text: str, **params):
         assert "Введите новое время" in text
-        nonlocal send_message_called
-        send_message_called = True
+        calls["send_message"] = True
         return {"ok": True}
 
-    mock_storage = Mock(
-        {
-            "get_user": get_user,
-            "update_user_state": update_user_state,
-        }
-    )
-    mock_messenger = Mock(
-        {
-            "edit_message_text": edit_message_text,
-            "send_message": send_message,
-            "answer_callback_query": lambda cb_id: None,
-        }
-    )
+    async def mock_answer_callback_query(cb_id: str):
+        assert cb_id == "cb_2"
+
+    mock_storage = Mock({
+        "get_user": mock_get_user,
+        "update_user_state": mock_update_user_state,
+    })
+    mock_messenger = Mock({
+        "edit_message_text": mock_edit_message_text,
+        "send_message": mock_send_message,
+        "answer_callback_query": mock_answer_callback_query,
+    })
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(SettingsCallbackHandler())
-    dispatcher.dispatch(test_update)
 
-    assert update_state_called
-    assert send_message_called
+    await dispatcher.dispatch(test_update)
+
+    assert calls["update_state"]
+    assert calls["send_message"]

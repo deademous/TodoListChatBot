@@ -33,7 +33,7 @@ class TaskActionCallbackHandler(Handler):
         message_id = update["callback_query"]["message"]["message_id"]
         callback_data = update["callback_query"]["data"]
 
-        messenger.answer_callback_query(update["callback_query"]["id"])
+        await messenger.answer_callback_query(update["callback_query"]["id"])
 
         try:
             action, task_id_str = callback_data.split(":", 1)
@@ -45,7 +45,7 @@ class TaskActionCallbackHandler(Handler):
             await storage.update_user_data(telegram_id, {"postpone_task_id": task_id})
             await storage.update_user_state(telegram_id, "WAIT_POSTPONE_TIME")
 
-            messenger.delete_message(chat_id=chat_id, message_id=message_id)
+            await messenger.delete_message(chat_id=chat_id, message_id=message_id)
 
             inline_keyboard = json.dumps(
                 {
@@ -61,7 +61,7 @@ class TaskActionCallbackHandler(Handler):
                     ]
                 }
             )
-            messenger.send_message(
+            await messenger.send_message(
                 chat_id=chat_id,
                 text="🕑 На сколько отложить? (кнопки или текст '1ч', 'завтра в 9'):",
                 reply_markup=inline_keyboard,
@@ -75,7 +75,7 @@ class TaskActionCallbackHandler(Handler):
 
         if updated_task:
             new_card_text = format_task_card_text(updated_task)
-            messenger.edit_message_text(
+            await messenger.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,
                 text=new_card_text,

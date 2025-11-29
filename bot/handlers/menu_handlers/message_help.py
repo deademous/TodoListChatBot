@@ -44,5 +44,5 @@ class MessageHelp(Handler):
             "Бот автоматически напомнит вам о задачах с установленным временем."
         )
 
-        messenger.send_message(chat_id=chat_id, text=text, parse_mode="Markdown")
+        await messenger.send_message(chat_id=chat_id, text=text, parse_mode="Markdown")
         return HandlerStatus.STOP

@@ -1,11 +1,14 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.tools.task_action_callback_handler import TaskActionCallbackHandler
 from tests.mocks import Mock
 
 
-def test_task_action_done():
+@pytest.mark.asyncio
+async def test_task_action_done():
     test_update = {
-        "update_id": 3,
+        "update_id": 999,
         "callback_query": {
             "id": "cb_3",
             "from": {"id": 789},
@@ -14,52 +17,61 @@ def test_task_action_done():
         },
     }
 
-    update_status_called = False
-    edit_message_called = False
+    calls = {
+        "update_status": False,
+        "edit_message": False
+    }
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
+        assert telegram_id == 789
         return {"state": None, "data_json": "{}"}
 
-    def update_task_status(task_id: int, status: str) -> None:
+    async def mock_update_task_status(task_id: int, status: str):
         assert task_id == 55
         assert status == "done"
-        nonlocal update_status_called
-        update_status_called = True
+        calls["update_status"] = True
 
-    def get_task_by_id(task_id: int) -> dict:
+    async def mock_get_task_by_id(task_id: int):
+        assert task_id == 55
         return {"id": 55, "text": "Тест", "task_time": "12:00", "status": "done"}
 
-    def edit_message_text(chat_id: int, message_id: int, text: str, **params) -> dict:
+    async def mock_edit_message_text(chat_id: int, message_id: int, text: str, **params):
+        assert chat_id == 789
+        assert message_id == 30
         assert "✅ [ВЫПОЛНЕНО]" in text
-        nonlocal edit_message_called
-        edit_message_called = True
+        calls["edit_message"] = True
         return {"ok": True}
+
+    async def mock_answer_callback_query(cb_id: str):
+        assert cb_id == "cb_3"
 
     mock_storage = Mock(
         {
-            "get_user": get_user,
-            "update_task_status": update_task_status,
-            "get_task_by_id": get_task_by_id,
+            "get_user": mock_get_user,
+            "update_task_status": mock_update_task_status,
+            "get_task_by_id": mock_get_task_by_id,
         }
     )
     mock_messenger = Mock(
         {
-            "edit_message_text": edit_message_text,
-            "answer_callback_query": lambda cb_id: None,
+            "edit_message_text": mock_edit_message_text,
+            "answer_callback_query": mock_answer_callback_query,
         }
     )
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(TaskActionCallbackHandler())
-    dispatcher.dispatch(test_update)
 
-    assert update_status_called
-    assert edit_message_called
+    await dispatcher.dispatch(test_update)
+
+    assert calls["update_status"]
+    assert calls["edit_message"]
 
 
-def test_task_action_postpone_start():
+@pytest.mark.asyncio
+async def test_task_action_postpone_start():
     test_update = {
-        "update_id": 4,
+        "update_id": 999,
         "callback_query": {
             "id": "cb_4",
             "from": {"id": 999},
@@ -68,56 +80,62 @@ def test_task_action_postpone_start():
         },
     }
 
-    update_data_called = False
-    update_state_called = False
-    delete_msg_called = False
-    send_msg_called = False
+    calls = {
+        "update_data": False,
+        "update_state": False,
+        "delete_msg": False,
+        "send_msg": False
+    }
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
+        assert telegram_id == 999
         return {"state": None, "data_json": "{}"}
 
-    def update_user_data(telegram_id: int, data: dict) -> None:
+    async def mock_update_user_data(telegram_id: int, data: dict):
         assert data == {"postpone_task_id": 66}
-        nonlocal update_data_called
-        update_data_called = True
+        calls["update_data"] = True
 
-    def update_user_state(telegram_id: int, state: str) -> None:
+    async def mock_update_user_state(telegram_id: int, state):
         assert state == "WAIT_POSTPONE_TIME"
-        nonlocal update_state_called
-        update_state_called = True
+        calls["update_state"] = True
 
-    def delete_message(chat_id: int, message_id: int) -> dict:
-        nonlocal delete_msg_called
-        delete_msg_called = True
+    async def mock_delete_message(chat_id: int, message_id: int):
+        assert chat_id == 999
+        assert message_id == 40
+        calls["delete_msg"] = True
         return {"ok": True}
 
-    def send_message(chat_id: int, text: str, **params) -> dict:
+    async def mock_send_message(chat_id: int, text: str, **params):
+        assert chat_id == 999
         assert "На сколько отложить?" in text
         assert "inline_keyboard" in params.get("reply_markup", "")
-        nonlocal send_msg_called
-        send_msg_called = True
+        calls["send_msg"] = True
         return {"ok": True}
+
+    async def mock_answer_callback_query(cb_id: str):
+        assert cb_id == "cb_4"
 
     mock_storage = Mock(
         {
-            "get_user": get_user,
-            "update_user_data": update_user_data,
-            "update_user_state": update_user_state,
+            "get_user": mock_get_user,
+            "update_user_data": mock_update_user_data,
+            "update_user_state": mock_update_user_state,
         }
     )
     mock_messenger = Mock(
         {
-            "delete_message": delete_message,
-            "send_message": send_message,
-            "answer_callback_query": lambda cb_id: None,
+            "delete_message": mock_delete_message,
+            "send_message": mock_send_message,
+            "answer_callback_query": mock_answer_callback_query,
         }
     )
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(TaskActionCallbackHandler())
-    dispatcher.dispatch(test_update)
 
-    assert update_data_called
-    assert update_state_called
-    assert delete_msg_called
-    assert send_msg_called
+    await dispatcher.dispatch(test_update)
+
+    assert calls["update_data"]
+    assert calls["update_state"]
+    assert calls["delete_msg"]
+    assert calls["send_msg"]

@@ -1,12 +1,14 @@
+import pytest
+from datetime import datetime, timedelta
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.state_handlers.postpone_handler import PostponeHandler
 from tests.mocks import Mock
-from datetime import datetime, timedelta
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
 
 
-def test_postpone_handler_callback():
-
+@pytest.mark.asyncio
+async def test_postpone_handler_callback():
     test_update = {
         "update_id": 1013,
         "callback_query": {
@@ -17,33 +19,32 @@ def test_postpone_handler_callback():
         },
     }
 
-    update_task_called = False
-    clear_state_called = False
-    get_task_called = False
-    send_message_called = False
+    calls = {
+        "update_task": False,
+        "clear_state": False,
+        "get_task": False,
+        "send_message": False,
+    }
 
     expected_time = (datetime.now() + timedelta(hours=1)).strftime("%H:%M")
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
         assert telegram_id == 888
         return {"state": "WAIT_POSTPONE_TIME", "data_json": '{"postpone_task_id": 123}'}
 
-    def update_task(task_id: int, task_date: str, task_time: str, status: str) -> None:
+    async def mock_update_task(task_id: int, task_date: str, task_time: str, status: str):
         assert task_id == 123
         assert status == "active"
         assert task_time == expected_time
-        nonlocal update_task_called
-        update_task_called = True
+        calls["update_task"] = True
 
-    def clear_user_state_and_temp_data(telegram_id: int) -> None:
+    async def mock_clear_user_state_and_temp_data(telegram_id: int):
         assert telegram_id == 888
-        nonlocal clear_state_called
-        clear_state_called = True
+        calls["clear_state"] = True
 
-    def get_task_by_id(task_id: int) -> dict:
+    async def mock_get_task_by_id(task_id: int):
         assert task_id == 123
-        nonlocal get_task_called
-        get_task_called = True
+        calls["get_task"] = True
         return {
             "id": 123,
             "text": "Тестовая задача",
@@ -51,31 +52,33 @@ def test_postpone_handler_callback():
             "status": "active",
         }
 
-    def send_message(chat_id: int, text: str, **params) -> dict:
+    async def mock_send_message(chat_id: int, text: str, **params):
         assert chat_id == 888
         assert "✅ Задача успешно отложена" in text
         assert params.get("reply_markup") == MAIN_MENU_KEYBOARD
-        nonlocal send_message_called
-        send_message_called = True
+        calls["send_message"] = True
         return {"ok": True}
 
-    mock_storage = Mock(
-        {
-            "get_user": get_user,
-            "update_task": update_task,
-            "clear_user_state_and_temp_data": clear_user_state_and_temp_data,
-            "get_task_by_id": get_task_by_id,
-        }
-    )
-    mock_messenger = Mock(
-        {"send_message": send_message, "answer_callback_query": lambda cb_id: None}
-    )
+    async def mock_answer_callback_query(cb_id: str):
+        assert cb_id == "cb_3"
+
+    mock_storage = Mock({
+        "get_user": mock_get_user,
+        "update_task": mock_update_task,
+        "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
+        "get_task_by_id": mock_get_task_by_id,
+    })
+    mock_messenger = Mock({
+        "send_message": mock_send_message,
+        "answer_callback_query": mock_answer_callback_query,
+    })
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(PostponeHandler())
-    dispatcher.dispatch(test_update)
 
-    assert update_task_called
-    assert clear_state_called
-    assert get_task_called
-    assert send_message_called
+    await dispatcher.dispatch(test_update)
+
+    assert calls["update_task"]
+    assert calls["clear_state"]
+    assert calls["get_task"]
+    assert calls["send_message"]

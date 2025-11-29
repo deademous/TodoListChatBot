@@ -37,7 +37,7 @@ class SettingsTimeHandler(Handler):
         normalized_time = normalize_time(new_time)
 
         if not normalized_time:
-            messenger.send_message(
+            await messenger.send_message(
                 chat_id,
                 "Неверный формат. Введите время, например: '08:30', '9:00' или '21.00'.",
             )

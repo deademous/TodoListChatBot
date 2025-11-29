@@ -1,9 +1,12 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.tools.ensure_user_exists import EnsureUserExists
 from tests.mocks import Mock
 
 
-def test_ensure_user_exists_handler():
+@pytest.mark.asyncio
+async def test_ensure_user_exists_handler():
     test_update = {
         "update_id": 1001,
         "message": {
@@ -14,21 +17,22 @@ def test_ensure_user_exists_handler():
         },
     }
 
-    ensure_user_exists_called = False
+    calls = {
+        "ensure_user_exists": False
+    }
 
-    def ensure_user_exists(telegram_id: int) -> None:
-        nonlocal ensure_user_exists_called
-        ensure_user_exists_called = True
+    async def mock_ensure_user_exists(telegram_id: int):
         assert telegram_id == 12345
+        calls["ensure_user_exists"] = True
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
         assert telegram_id == 12345
         return {"state": None, "data_json": "{}"}
 
     mock_storage = Mock(
         {
-            "ensure_user_exists": ensure_user_exists,
-            "get_user": get_user,
+            "ensure_user_exists": mock_ensure_user_exists,
+            "get_user": mock_get_user,
         }
     )
     mock_messenger = Mock({})
@@ -36,6 +40,6 @@ def test_ensure_user_exists_handler():
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(EnsureUserExists())
 
-    dispatcher.dispatch(test_update)
+    await dispatcher.dispatch(test_update)
 
-    assert ensure_user_exists_called
+    assert calls["ensure_user_exists"]

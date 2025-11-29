@@ -1,9 +1,12 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.menu_handlers.message_help import MessageHelp
 from tests.mocks import Mock
 
 
-def test_message_help_handler():
+@pytest.mark.asyncio
+async def test_message_help_handler():
 
     test_update = {
         "update_id": 1004,
@@ -15,26 +18,27 @@ def test_message_help_handler():
         },
     }
 
-    send_message_called = False
+    calls = {
+        "send_message": False
+    }
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
         assert telegram_id == 456
         return {"state": None, "data_json": "{}"}
 
-    def send_message(chat_id: int, text: str, **params) -> dict:
+    async def mock_send_message(chat_id: int, text: str, **params):
         assert chat_id == 456
         assert "**Справка по боту-планировщику**" in text
         assert params.get("parse_mode") == "Markdown"
-        nonlocal send_message_called
-        send_message_called = True
+        calls["send_message"] = True
         return {"ok": True}
 
-    mock_storage = Mock({"get_user": get_user})
-    mock_messenger = Mock({"send_message": send_message})
+    mock_storage = Mock({"get_user": mock_get_user})
+    mock_messenger = Mock({"send_message": mock_send_message})
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(MessageHelp())
 
-    dispatcher.dispatch(test_update)
+    await dispatcher.dispatch(test_update)
 
-    assert send_message_called
+    assert calls["send_message"]

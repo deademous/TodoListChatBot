@@ -46,7 +46,7 @@ class MessageSettings(Handler):
             f"• Вечерний обзор: `{current_evening}`"
         )
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id,
             text=text,
             parse_mode="Markdown",

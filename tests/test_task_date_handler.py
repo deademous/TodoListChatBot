@@ -1,9 +1,12 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.state_handlers.task_date_handler import TaskDateHandler
 from tests.mocks import Mock
 
 
-def test_task_date_handler():
+@pytest.mark.asyncio
+async def test_task_date_handler():
     test_update = {
         "update_id": 1008,
         "callback_query": {
@@ -14,54 +17,54 @@ def test_task_date_handler():
         },
     }
 
-    update_data_called = False
-    update_state_called = False
-    edit_message_called = False
+    calls = {
+        "update_data": False,
+        "update_state": False,
+        "edit_message": False,
+    }
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
         assert telegram_id == 333
         return {"state": "WAIT_TASK_DATE", "data_json": '{"text": "Купить молоко"}'}
 
-    def update_user_data(telegram_id: int, data: dict) -> None:
+    async def mock_update_user_data(telegram_id: int, data: dict):
         assert telegram_id == 333
         assert data["text"] == "Купить молоко"
         assert "date" in data
-        nonlocal update_data_called
-        update_data_called = True
+        calls["update_data"] = True
 
-    def update_user_state(telegram_id: int, state: str) -> None:
+    async def mock_update_user_state(telegram_id: int, state: str):
         assert telegram_id == 333
         assert state == "WAIT_TASK_TIME"
-        nonlocal update_state_called
-        update_state_called = True
+        calls["update_state"] = True
 
-    def edit_message_text(chat_id: int, message_id: int, text: str, **params) -> dict:
+    async def mock_edit_message_text(chat_id: int, message_id: int, text: str, **params):
         assert chat_id == 333
         assert message_id == 10
         assert "Укажите время" in text
         assert "set_time_notime" in params.get("reply_markup", "{}")
-        nonlocal edit_message_called
-        edit_message_called = True
+        calls["edit_message"] = True
         return {"ok": True}
 
     mock_storage = Mock(
         {
-            "get_user": get_user,
-            "update_user_data": update_user_data,
-            "update_user_state": update_user_state,
+            "get_user": mock_get_user,
+            "update_user_data": mock_update_user_data,
+            "update_user_state": mock_update_user_state,
         }
     )
     mock_messenger = Mock(
         {
-            "edit_message_text": edit_message_text,
+            "edit_message_text": mock_edit_message_text,
             "answer_callback_query": lambda cb_id: None,
         }
     )
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(TaskDateHandler())
-    dispatcher.dispatch(test_update)
 
-    assert update_data_called
-    assert update_state_called
-    assert edit_message_called
+    await dispatcher.dispatch(test_update)
+
+    assert calls["update_data"]
+    assert calls["update_state"]
+    assert calls["edit_message"]

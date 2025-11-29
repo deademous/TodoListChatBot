@@ -49,13 +49,13 @@ class MessageShowTasks(Handler):
         for header, filter_type in task_groups:
             tasks = await storage.get_tasks_by_filter(telegram_id, filter_type)
 
-            messenger.send_message(
+            await messenger.send_message(
                 chat_id=chat_id,
                 text=f"\n{header}\n",
             )
 
             if not tasks:
-                messenger.send_message(chat_id=chat_id, text="Список пуст.")
+                await messenger.send_message(chat_id=chat_id, text="Список пуст.")
                 continue
 
             found_any_tasks = True
@@ -65,7 +65,7 @@ class MessageShowTasks(Handler):
                 card_text = format_task_card_text(task)
                 card_markup = get_task_card_reply_markup(task_id)
 
-                messenger.send_message(
+                await messenger.send_message(
                     chat_id=chat_id,
                     text=card_text,
                     reply_markup=card_markup,

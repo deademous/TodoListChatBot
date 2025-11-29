@@ -107,7 +107,7 @@ class PostponeHandler(Handler):
 
             reply_markup = MAIN_MENU_KEYBOARD
 
-            messenger.send_message(
+            await messenger.send_message(
                 chat_id=chat_id, text=response_text, reply_markup=reply_markup
             )
             return HandlerStatus.STOP

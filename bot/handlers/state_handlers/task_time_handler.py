@@ -40,7 +40,7 @@ class TaskTimeHandler(Handler):
 
         normalized_time = normalize_time(task_time_text)
         if not normalized_time:
-            messenger.send_message(
+            await messenger.send_message(
                 chat_id=chat_id,
                 text="Непонятный формат времени. Попробуйте '14:30', '18.00' или просто '9'.",
             )
@@ -54,7 +54,7 @@ class TaskTimeHandler(Handler):
         )
         await storage.clear_user_state_and_temp_data(telegram_id)
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id,
             text="Готово! Задача создана:",
             reply_markup=MAIN_MENU_KEYBOARD,
@@ -69,7 +69,7 @@ class TaskTimeHandler(Handler):
         card_text = format_task_card_text(new_task)
         card_markup = get_task_card_reply_markup(task_id)
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id, text=card_text, reply_markup=card_markup
         )
 

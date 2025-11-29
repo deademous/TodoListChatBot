@@ -59,7 +59,7 @@ class TaskDateHandler(Handler):
             }
         )
 
-        messenger.edit_message_text(
+        await messenger.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
             text="Хорошо. Укажите время (в формате ЧЧ:ММ) или нажмите 'Без времени'",

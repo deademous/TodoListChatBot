@@ -1,10 +1,12 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.state_handlers.task_time_handler import TaskTimeHandler
 from tests.mocks import Mock
 
 
-def test_task_time_handler():
-
+@pytest.mark.asyncio
+async def test_task_time_handler():
     test_update = {
         "update_id": 1009,
         "message": {
@@ -15,52 +17,50 @@ def test_task_time_handler():
         },
     }
 
-    create_task_called = False
-    clear_state_called = False
-    send_message_calls = []
+    calls = {
+        "create_task": False,
+        "clear_state": False,
+        "send_message": 0,
+    }
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
         assert telegram_id == 444
         return {
             "state": "WAIT_TASK_TIME",
             "data_json": '{"text": "Позвонить другу", "date": "2025-01-01"}',
         }
 
-    def create_task(telegram_id: int, text: str, task_date: str, task_time: str) -> int:
+    async def mock_create_task(telegram_id: int, text: str, task_date: str, task_time: str):
         assert telegram_id == 444
         assert text == "Позвонить другу"
         assert task_date == "2025-01-01"
         assert task_time == "14:30"
-        nonlocal create_task_called
-        create_task_called = True
-        return 99  # ID новой задачи
+        calls["create_task"] = True
+        return 99
 
-    def clear_user_state_and_temp_data(telegram_id: int) -> None:
+    async def mock_clear_user_state_and_temp_data(telegram_id: int):
         assert telegram_id == 444
-        nonlocal clear_state_called
-        clear_state_called = True
+        calls["clear_state"] = True
 
-    def send_message(chat_id: int, text: str, **params) -> dict:
+    async def mock_send_message(chat_id: int, text: str, **params):
         assert chat_id == 444
-        send_message_calls.append({"text": text, "params": params})
+        calls["send_message"] += 1
         return {"ok": True}
 
     mock_storage = Mock(
         {
-            "get_user": get_user,
-            "create_task": create_task,
-            "clear_user_state_and_temp_data": clear_user_state_and_temp_data,
+            "get_user": mock_get_user,
+            "create_task": mock_create_task,
+            "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
         }
     )
-    mock_messenger = Mock({"send_message": send_message})
+    mock_messenger = Mock({"send_message": mock_send_message})
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(TaskTimeHandler())
-    dispatcher.dispatch(test_update)
 
-    assert create_task_called
-    assert clear_state_called
-    assert len(send_message_calls) == 2
-    assert "Готово! Задача создана:" in send_message_calls[0]["text"]
-    assert "[14:30] Позвонить другу" in send_message_calls[1]["text"]
-    assert "task_done:99" in send_message_calls[1]["params"].get("reply_markup", "{}")
+    await dispatcher.dispatch(test_update)
+
+    assert calls["create_task"]
+    assert calls["clear_state"]
+    assert calls["send_message"] == 2

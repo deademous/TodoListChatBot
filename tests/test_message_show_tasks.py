@@ -1,9 +1,12 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.menu_handlers.message_show_tasks import MessageShowTasks
 from tests.mocks import Mock
 
 
-def test_message_show_tasks_handler_with_tasks():
+@pytest.mark.asyncio
+async def test_message_show_tasks_handler_with_tasks():
     test_update = {
         "update_id": 1006,
         "message": {
@@ -14,9 +17,11 @@ def test_message_show_tasks_handler_with_tasks():
         },
     }
 
-    clear_state_called = False
-    get_tasks_calls = []
-    send_message_calls = []
+    calls = {
+        "clear_state": False,
+        "get_tasks": [],
+        "send_message": []
+    }
 
     mock_tasks_today = [
         {"id": 1, "text": "Купить молоко", "task_time": "14:00", "status": "active"}
@@ -26,17 +31,17 @@ def test_message_show_tasks_handler_with_tasks():
         {"id": 2, "text": "Позвонить", "task_time": None, "status": "active"}
     ]
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
+        assert telegram_id == 111
         return {"state": None, "data_json": "{}"}
 
-    def clear_user_state_and_temp_data(telegram_id: int) -> None:
+    async def mock_clear_user_state_and_temp_data(telegram_id: int):
         assert telegram_id == 111
-        nonlocal clear_state_called
-        clear_state_called = True
+        calls["clear_state"] = True
 
-    def get_tasks_by_filter(telegram_id: int, filter_type: str) -> list[dict]:
+    async def mock_get_tasks_by_filter(telegram_id: int, filter_type: str):
         assert telegram_id == 111
-        get_tasks_calls.append(filter_type)
+        calls["get_tasks"].append(filter_type)
         if filter_type == "show_today":
             return mock_tasks_today
         if filter_type == "show_tomorrow":
@@ -45,33 +50,33 @@ def test_message_show_tasks_handler_with_tasks():
             return mock_tasks_nodate
         return []
 
-    def send_message(chat_id: int, text: str, **params) -> dict:
+    async def mock_send_message(chat_id: int, text: str, **params):
         assert chat_id == 111
-        send_message_calls.append({"text": text, "params": params})
+        calls["send_message"].append({"text": text, "params": params})
         return {"ok": True}
 
-    mock_storage = Mock(
-        {
-            "get_user": get_user,
-            "clear_user_state_and_temp_data": clear_user_state_and_temp_data,
-            "get_tasks_by_filter": get_tasks_by_filter,
-        }
-    )
-    mock_messenger = Mock({"send_message": send_message})
+    mock_storage = Mock({
+        "get_user": mock_get_user,
+        "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
+        "get_tasks_by_filter": mock_get_tasks_by_filter,
+    })
+    mock_messenger = Mock({"send_message": mock_send_message})
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(MessageShowTasks())
-    dispatcher.dispatch(test_update)
 
-    assert clear_state_called
-    assert len(get_tasks_calls) == 3
+    await dispatcher.dispatch(test_update)
 
-    assert len(send_message_calls) == 6
-    assert "📅 Задачи на Сегодня:" in send_message_calls[0]["text"]
-    assert "[14:00] Купить молоко" in send_message_calls[1]["text"]
-    assert "task_done:1" in send_message_calls[1]["params"].get("reply_markup", "{}")
-    assert "➡️ Задачи на Завтра:" in send_message_calls[2]["text"]
-    assert "Список пуст." in send_message_calls[3]["text"]
-    assert "📝 Задачи без даты:" in send_message_calls[4]["text"]
-    assert "[Без времени] Позвонить" in send_message_calls[5]["text"]
-    assert "task_done:2" in send_message_calls[5]["params"].get("reply_markup", "{}")
+    assert calls["clear_state"]
+    assert len(calls["get_tasks"]) == 3
+
+    send_messages = calls["send_message"]
+    assert len(send_messages) == 6
+    assert "📅 Задачи на Сегодня:" in send_messages[0]["text"]
+    assert "[14:00] Купить молоко" in send_messages[1]["text"]
+    assert "task_done:1" in send_messages[1]["params"].get("reply_markup", "{}")
+    assert "➡️ Задачи на Завтра:" in send_messages[2]["text"]
+    assert "Список пуст." in send_messages[3]["text"]
+    assert "📝 Задачи без даты:" in send_messages[4]["text"]
+    assert "[Без времени] Позвонить" in send_messages[5]["text"]
+    assert "task_done:2" in send_messages[5]["params"].get("reply_markup", "{}")

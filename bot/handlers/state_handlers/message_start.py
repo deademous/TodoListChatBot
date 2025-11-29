@@ -36,7 +36,7 @@ class MessageStart(Handler):
 
         reply_markup = MAIN_MENU_KEYBOARD
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id,
             text="Бот-Планировщик к вашим услугам!",
             reply_markup=reply_markup,

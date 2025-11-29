@@ -1,10 +1,13 @@
+import pytest
+
 from bot.dispatcher import Dispatcher
 from bot.handlers.menu_handlers.message_add_task import MessageAddTask
 from tests.mocks import Mock
 from bot.interface.keyboards import REMOVE_KEYBOARD
 
 
-def test_message_add_task_handler():
+@pytest.mark.asyncio
+async def test_message_add_task_handler():
     test_update = {
         "update_id": 1003,
         "message": {
@@ -15,39 +18,37 @@ def test_message_add_task_handler():
         },
     }
 
-    update_state_called = False
-    send_message_called = False
+    calls = {
+        "update_state": False,
+        "send_message": False
+    }
 
-    def get_user(telegram_id: int) -> dict | None:
+    async def mock_get_user(telegram_id: int):
         assert telegram_id == 123
         return {"state": None, "data_json": "{}"}
 
-    def update_user_state(telegram_id: int, state: str) -> None:
+    async def mock_update_user_state(telegram_id: int, state: str):
         assert telegram_id == 123
         assert state == "WAIT_TASK_NAME"
-        nonlocal update_state_called
-        update_state_called = True
+        calls["update_state"] = True
 
-    def send_message(chat_id: int, text: str, **params) -> dict:
+    async def mock_send_message(chat_id: int, text: str, **params):
         assert chat_id == 123
         assert text == "Напишите, что нужно сделать:"
         assert params.get("reply_markup") == REMOVE_KEYBOARD
-        nonlocal send_message_called
-        send_message_called = True
+        calls["send_message"] = True
         return {"ok": True}
 
-    mock_storage = Mock(
-        {
-            "get_user": get_user,
-            "update_user_state": update_user_state,
-        }
-    )
-    mock_messenger = Mock({"send_message": send_message})
+    mock_storage = Mock({
+        "get_user": mock_get_user,
+        "update_user_state": mock_update_user_state,
+    })
+    mock_messenger = Mock({"send_message": mock_send_message})
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(MessageAddTask())
 
-    dispatcher.dispatch(test_update)
+    await dispatcher.dispatch(test_update)
 
-    assert update_state_called
-    assert send_message_called
+    assert calls["update_state"]
+    assert calls["send_message"]

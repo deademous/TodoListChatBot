@@ -37,7 +37,7 @@ class MessageAddTask(Handler):
 
         reply_markup = REMOVE_KEYBOARD
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id,
             text="Напишите, что нужно сделать:",
             reply_markup=reply_markup,

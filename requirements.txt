@@ -2,5 +2,6 @@ python-dotenv
 black
 ruff
 pytest
+pytest-asyncio
 aiohttp
 asyncpg

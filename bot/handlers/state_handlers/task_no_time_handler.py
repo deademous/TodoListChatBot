@@ -45,13 +45,13 @@ class TaskNoTimeHandler(Handler):
         task_id = await storage.create_task(telegram_id, task_text, task_date, None)
         await storage.clear_user_state_and_temp_data(telegram_id)
 
-        messenger.edit_message_text(
+        await messenger.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
             text="Готово! Задача создана (без времени).",
         )
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id,
             text="Вы в главном меню.",
             reply_markup=MAIN_MENU_KEYBOARD,
@@ -66,7 +66,7 @@ class TaskNoTimeHandler(Handler):
         card_text = format_task_card_text(new_task)
         card_markup = get_task_card_reply_markup(task_id)
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id, text=card_text, reply_markup=card_markup
         )
 

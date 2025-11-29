@@ -33,28 +33,28 @@ class SettingsCallbackHandler(Handler):
         message_id = update["callback_query"]["message"]["message_id"]
         callback_data = update["callback_query"]["data"]
 
-        messenger.answer_callback_query(update["callback_query"]["id"])
+        await messenger.answer_callback_query(update["callback_query"]["id"])
 
         if callback_data == "set_morning":
             await storage.update_user_state(telegram_id, "WAIT_SETTING_MORNING")
-            messenger.edit_message_text(
+            await messenger.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,
                 text="Вы выбрали 'Изменить утро'.",
             )
-            messenger.send_message(
+            await messenger.send_message(
                 chat_id=chat_id,
                 text="Введите новое время для утреннего дайджеста (например, 09:00):",
             )
 
         elif callback_data == "set_evening":
             await storage.update_user_state(telegram_id, "WAIT_SETTING_EVENING")
-            messenger.edit_message_text(
+            await messenger.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,
                 text="Вы выбрали 'Изменить вечер'.",
             )
-            messenger.send_message(
+            await messenger.send_message(
                 chat_id=chat_id,
                 text="Введите новое время для вечернего обзора (например, 21:00):",
             )

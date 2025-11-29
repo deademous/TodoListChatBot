@@ -46,21 +46,21 @@ class ShowTasksCallbackHandler(Handler):
         }
         title = title_map.get(callback_data, "Задачи")
 
-        messenger.edit_message_text(
+        await messenger.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
             text=f"{title}:",
         )
 
         if not tasks:
-            messenger.send_message(chat_id, "Список пуст!")
+            await messenger.send_message(chat_id, "Список пуст!")
             return HandlerStatus.STOP
 
         for task in tasks:
             task_id = task["id"]
             card_text = format_task_card_text(task)
             card_markup = get_task_card_reply_markup(task_id)
-            messenger.send_message(
+            await messenger.send_message(
                 chat_id=chat_id, text=card_text, reply_markup=card_markup
             )
 

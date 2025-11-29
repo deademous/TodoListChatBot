@@ -38,7 +38,7 @@ class TaskNameHandler(Handler):
         await storage.update_user_state(telegram_id, "WAIT_TASK_DATE")
         inline_keyboard = TASK_DATE_KEYBOARD
 
-        messenger.send_message(
+        await messenger.send_message(
             chat_id=chat_id,
             text=f"Отлично! Задача: '{task_text}'. \nНа какой день?",
             reply_markup=inline_keyboard,
