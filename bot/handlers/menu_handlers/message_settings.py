@@ -2,6 +2,7 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.interface.keyboards import SETTINGS_KEYBOARD
+import asyncio
 
 
 class MessageSettings(Handler):
@@ -24,7 +25,7 @@ class MessageSettings(Handler):
             )
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -36,7 +37,7 @@ class MessageSettings(Handler):
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 
-        settings = storage.get_user_settings(telegram_id)
+        settings = await storage.get_user_settings(telegram_id)
         current_morning = settings.get("morning_digest_time", "09:00")
         current_evening = settings.get("evening_review_time", "21:00")
 

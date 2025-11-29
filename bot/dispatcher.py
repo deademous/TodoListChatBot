@@ -29,14 +29,14 @@ class Dispatcher:
             return update["callback_query"]["from"]["id"]
         return None
 
-    def dispatch(self, update: dict) -> None:
+    async def dispatch(self, update: dict) -> None:
         update_id = update["update_id"]
         start_time = time.time()
         logger.info(f"[DISPATCH {update_id}] → dispatch started 🏃‍♂️")
 
         try:
             telegram_id = self._get_telegram_id_from_update(update)
-            user = self._storage.get_user(telegram_id) if telegram_id else None
+            user = await self._storage.get_user(telegram_id) if telegram_id else None
 
             user_state = user.get("state") if user else None
             data_json_str = user.get("data_json") if user else "{}"
@@ -54,7 +54,7 @@ class Dispatcher:
                     self._storage,
                     self._messenger,
                 ):
-                    signal = handler.handle(
+                    signal = await handler.handle(
                         update,
                         user_state,
                         data_json,

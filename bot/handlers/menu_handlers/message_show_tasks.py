@@ -5,6 +5,7 @@ from bot.handlers.tools.task_card import (
     format_task_card_text,
     get_task_card_reply_markup,
 )
+import asyncio
 
 
 class MessageShowTasks(Handler):
@@ -24,7 +25,7 @@ class MessageShowTasks(Handler):
             and update["message"]["text"] == "📅 Мои задачи"
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -36,7 +37,7 @@ class MessageShowTasks(Handler):
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 
-        storage.clear_user_state_and_temp_data(telegram_id)
+        await storage.clear_user_state_and_temp_data(telegram_id)
 
         task_groups = [
             ("📅 Задачи на Сегодня:", "show_today"),
@@ -47,7 +48,7 @@ class MessageShowTasks(Handler):
         found_any_tasks = False
 
         for header, filter_type in task_groups:
-            tasks = storage.get_tasks_by_filter(telegram_id, filter_type)
+            tasks = await storage.get_tasks_by_filter(telegram_id, filter_type)
 
             messenger.send_message(
                 chat_id=chat_id,

@@ -7,13 +7,13 @@ from bot.infrastructure.messenger_telegram import MessengerTelegram
 from bot.infrastructure.storage_postgres import StoragePostgres
 from bot.notifier import start_notifier
 import threading
+import asyncio
 
 
-def main() -> None:
+async def main() -> None:
+    storage: Storage = StoragePostgres()
+    messenger: Messenger = MessengerTelegram()
     try:
-        storage: Storage = StoragePostgres()
-        messenger: Messenger = MessengerTelegram()
-
         dispatcher = Dispatcher(storage, messenger)
         dispatcher.add_handlers(*get_handlers())
 
@@ -22,11 +22,15 @@ def main() -> None:
         )
         notifier_thread.start()
 
-        start_long_polling(dispatcher, messenger)
-
+        await bot.long_polling.start_long_polling(dispatcher, messenger)
     except KeyboardInterrupt:
         print("\nBye!")
+    finally:
+        if hasattr(messenger, "close"):
+            await messenger.close()
+        if hasattr(storage, "close"):
+            await storage.close()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

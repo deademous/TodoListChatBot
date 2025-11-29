@@ -2,6 +2,7 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.interface.keyboards import REMOVE_KEYBOARD
+import asyncio
 
 
 class MessageAddTask(Handler):
@@ -21,7 +22,7 @@ class MessageAddTask(Handler):
             and update["message"]["text"] == "➕ Добавить задачу"
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -33,7 +34,7 @@ class MessageAddTask(Handler):
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 
-        storage.update_user_state(telegram_id, "WAIT_TASK_NAME")
+        await storage.update_user_state(telegram_id, "WAIT_TASK_NAME")
 
         reply_markup = REMOVE_KEYBOARD
 

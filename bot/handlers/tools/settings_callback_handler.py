@@ -1,6 +1,7 @@
 from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
+import asyncio
 
 
 class SettingsCallbackHandler(Handler):
@@ -20,7 +21,7 @@ class SettingsCallbackHandler(Handler):
             and not update["callback_query"]["data"] == "set_time_notime"
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -36,7 +37,7 @@ class SettingsCallbackHandler(Handler):
         messenger.answer_callback_query(update["callback_query"]["id"])
 
         if callback_data == "set_morning":
-            storage.update_user_state(telegram_id, "WAIT_SETTING_MORNING")
+            await storage.update_user_state(telegram_id, "WAIT_SETTING_MORNING")
             messenger.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,
@@ -48,7 +49,7 @@ class SettingsCallbackHandler(Handler):
             )
 
         elif callback_data == "set_evening":
-            storage.update_user_state(telegram_id, "WAIT_SETTING_EVENING")
+            await storage.update_user_state(telegram_id, "WAIT_SETTING_EVENING")
             messenger.edit_message_text(
                 chat_id=chat_id,
                 message_id=message_id,

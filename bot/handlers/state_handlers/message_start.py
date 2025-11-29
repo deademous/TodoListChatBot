@@ -2,6 +2,7 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
+import asyncio
 
 
 class MessageStart(Handler):
@@ -20,7 +21,7 @@ class MessageStart(Handler):
             and update["message"]["text"] == "/start"
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -32,7 +33,7 @@ class MessageStart(Handler):
         telegram_id = update["message"]["from"]["id"]
         chat_id = update["message"]["chat"]["id"]
 
-        storage.clear_user_state_and_temp_data(telegram_id)
+        await storage.clear_user_state_and_temp_data(telegram_id)
 
         reply_markup = MAIN_MENU_KEYBOARD
 

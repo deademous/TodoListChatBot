@@ -22,7 +22,7 @@ class EnsureUserExists(Handler):
     ) -> bool:
         return self._get_telegram_id(update) is not None
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -32,5 +32,5 @@ class EnsureUserExists(Handler):
     ) -> HandlerStatus:
         telegram_id = self._get_telegram_id(update)
         if telegram_id:
-            storage.ensure_user_exists(telegram_id)
+            await storage.ensure_user_exists(telegram_id)
         return HandlerStatus.CONTINUE

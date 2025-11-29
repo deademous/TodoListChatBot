@@ -6,6 +6,7 @@ from bot.handlers.tools.task_card import (
     get_task_card_reply_markup,
 )
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
+import asyncio
 
 
 class TaskNoTimeHandler(Handler):
@@ -24,7 +25,7 @@ class TaskNoTimeHandler(Handler):
             and update["callback_query"]["data"] == "set_time_notime"
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -42,8 +43,8 @@ class TaskNoTimeHandler(Handler):
         task_text = data_json.get("text")
         task_date = data_json.get("date")
 
-        task_id = storage.create_task(telegram_id, task_text, task_date, None)
-        storage.clear_user_state_and_temp_data(telegram_id)
+        task_id = await storage.create_task(telegram_id, task_text, task_date, None)
+        await storage.clear_user_state_and_temp_data(telegram_id)
 
         messenger.edit_message_text(
             chat_id=chat_id,

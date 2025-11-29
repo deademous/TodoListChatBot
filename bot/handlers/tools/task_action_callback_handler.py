@@ -3,6 +3,7 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.handlers.tools.task_card import format_task_card_text
+import asyncio
 
 
 class TaskActionCallbackHandler(Handler):
@@ -20,7 +21,7 @@ class TaskActionCallbackHandler(Handler):
             and update["callback_query"]["data"].startswith("task_")
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -42,8 +43,8 @@ class TaskActionCallbackHandler(Handler):
             return HandlerStatus.STOP
 
         if action == "task_postpone":
-            storage.update_user_data(telegram_id, {"postpone_task_id": task_id})
-            storage.update_user_state(telegram_id, "WAIT_POSTPONE_TIME")
+            await storage.update_user_data(telegram_id, {"postpone_task_id": task_id})
+            await storage.update_user_state(telegram_id, "WAIT_POSTPONE_TIME")
 
             messenger.delete_message(chat_id=chat_id, message_id=message_id)
 
@@ -70,8 +71,8 @@ class TaskActionCallbackHandler(Handler):
 
         new_status = "done" if action == "task_done" else "canceled"
 
-        storage.update_task_status(task_id, new_status)
-        updated_task = storage.get_task_by_id(task_id)
+        await storage.update_task_status(task_id, new_status)
+        updated_task = await storage.get_task_by_id(task_id)
 
         if updated_task:
             new_card_text = format_task_card_text(updated_task)

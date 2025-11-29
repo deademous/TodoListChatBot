@@ -5,6 +5,7 @@ from bot.domain.storage import Storage
 from bot.handlers.tools.task_card import format_task_card_text
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
 from bot.handlers.tools.time_parser import normalize_time
+import asyncio
 
 
 class PostponeHandler(Handler):
@@ -19,7 +20,7 @@ class PostponeHandler(Handler):
     ) -> bool:
         return state == "WAIT_POSTPONE_TIME"
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -42,7 +43,7 @@ class PostponeHandler(Handler):
 
         if not postpone_task_id:
             if telegram_id:
-                storage.clear_user_state_and_temp_data(telegram_id)
+                await storage.clear_user_state_and_temp_data(telegram_id)
             return HandlerStatus.STOP
 
         new_date = None
@@ -87,14 +88,14 @@ class PostponeHandler(Handler):
                 return HandlerStatus.STOP
 
         if telegram_id and new_date:
-            storage.update_task(
+            await storage.update_task(
                 postpone_task_id,
                 task_date=new_date,
                 task_time=new_time,
                 status="active",
             )
-            storage.clear_user_state_and_temp_data(telegram_id)
-            updated_task = storage.get_task_by_id(postpone_task_id)
+            await storage.clear_user_state_and_temp_data(telegram_id)
+            updated_task = await storage.get_task_by_id(postpone_task_id)
 
             time_display = new_time if new_time else "любое время"
             response_text = (

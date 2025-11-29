@@ -2,6 +2,7 @@ from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.interface.keyboards import TASK_DATE_KEYBOARD
+import asyncio
 
 
 class TaskNameHandler(Handler):
@@ -20,7 +21,7 @@ class TaskNameHandler(Handler):
             and "text" in update["message"]
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -33,9 +34,9 @@ class TaskNameHandler(Handler):
         task_text = update["message"]["text"]
 
         data_json["text"] = task_text
-        storage.update_user_data(telegram_id, data_json)
+        await storage.update_user_data(telegram_id, data_json)
 
-        storage.update_user_state(telegram_id, "WAIT_TASK_DATE")
+        await storage.update_user_state(telegram_id, "WAIT_TASK_DATE")
         inline_keyboard = TASK_DATE_KEYBOARD
 
         messenger.send_message(

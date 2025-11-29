@@ -3,6 +3,7 @@ from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
 from bot.handlers.tools.time_parser import normalize_time
+import asyncio
 
 
 class SettingsTimeHandler(Handler):
@@ -21,7 +22,7 @@ class SettingsTimeHandler(Handler):
             and "text" in update["message"]
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -50,8 +51,8 @@ class SettingsTimeHandler(Handler):
             setting_type = "evening_review_time"
             setting_name = "вечернего обзора"
 
-        storage.update_user_setting_time(telegram_id, setting_type, normalized_time)
-        storage.clear_user_state_and_temp_data(telegram_id)
+        await storage.update_user_setting_time(telegram_id, setting_type, normalized_time)
+        await storage.clear_user_state_and_temp_data(telegram_id)
 
         messenger.send_message(
             chat_id=chat_id,

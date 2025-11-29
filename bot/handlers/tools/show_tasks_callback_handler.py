@@ -5,6 +5,7 @@ from bot.handlers.tools.task_card import (
     format_task_card_text,
     get_task_card_reply_markup,
 )
+import asyncio
 
 
 class ShowTasksCallbackHandler(Handler):
@@ -22,7 +23,7 @@ class ShowTasksCallbackHandler(Handler):
             and update["callback_query"]["data"].startswith("show_")
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -37,7 +38,7 @@ class ShowTasksCallbackHandler(Handler):
 
         messenger.answer_callback_query(update["callback_query"]["id"])
 
-        tasks = storage.get_tasks_by_filter(telegram_id, callback_data)
+        tasks = await storage.get_tasks_by_filter(telegram_id, callback_data)
 
         title_map = {
             "show_today": "📅 Задачи на сегодня",

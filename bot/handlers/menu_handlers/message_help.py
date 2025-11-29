@@ -1,6 +1,7 @@
 from bot.handlers.tools.handler import Handler, HandlerStatus
 from bot.domain.messenger import Messenger
 from bot.domain.storage import Storage
+import asyncio
 
 
 class MessageHelp(Handler):
@@ -23,7 +24,7 @@ class MessageHelp(Handler):
             )
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,

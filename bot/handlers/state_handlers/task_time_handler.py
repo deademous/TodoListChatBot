@@ -7,6 +7,7 @@ from bot.handlers.tools.task_card import (
 )
 from bot.interface.keyboards import MAIN_MENU_KEYBOARD
 from bot.handlers.tools.time_parser import normalize_time
+import asyncio
 
 
 class TaskTimeHandler(Handler):
@@ -25,7 +26,7 @@ class TaskTimeHandler(Handler):
             and "text" in update["message"]
         )
 
-    def handle(
+    async def handle(
         self,
         update: dict,
         state: str,
@@ -49,10 +50,10 @@ class TaskTimeHandler(Handler):
         task_text = data_json.get("text")
         task_date = data_json.get("date")
 
-        task_id = storage.create_task(
+        task_id = await storage.create_task(
             telegram_id, task_text, task_date, normalized_time
         )
-        storage.clear_user_state_and_temp_data(telegram_id)
+        await storage.clear_user_state_and_temp_data(telegram_id)
 
         messenger.send_message(
             chat_id=chat_id,

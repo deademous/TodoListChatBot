@@ -2,4 +2,5 @@ python-dotenv
 black
 ruff
 pytest
-pg8000
+aiohttp
+asyncpg
