@@ -72,6 +72,7 @@ run: docker_volume
 	docker run -d \
 	  --name $(BOT_CONTAINER) \
 	  --restart unless-stopped \
+	  -e TZ="Europe/Moscow" \
 	  -e POSTGRES_HOST="$(POSTGRES_CONTAINER)" \
 	  -e POSTGRES_HOST_PORT="$(POSTGRES_CONTAINER_PORT)" \
 	  -e POSTGRES_USER="$(POSTGRES_USER)" \
