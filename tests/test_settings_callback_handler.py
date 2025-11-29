@@ -31,7 +31,9 @@ async def test_settings_callback_handler_morning():
         assert state == "WAIT_SETTING_MORNING"
         calls["update_state"] = True
 
-    async def mock_edit_message_text(chat_id: int, message_id: int, text: str, **params):
+    async def mock_edit_message_text(
+        chat_id: int, message_id: int, text: str, **params
+    ):
         return {"ok": True}
 
     async def mock_send_message(chat_id: int, text: str, **params):
@@ -42,15 +44,19 @@ async def test_settings_callback_handler_morning():
     async def mock_answer_callback_query(cb_id: str):
         assert cb_id == "cb_2"
 
-    mock_storage = Mock({
-        "get_user": mock_get_user,
-        "update_user_state": mock_update_user_state,
-    })
-    mock_messenger = Mock({
-        "edit_message_text": mock_edit_message_text,
-        "send_message": mock_send_message,
-        "answer_callback_query": mock_answer_callback_query,
-    })
+    mock_storage = Mock(
+        {
+            "get_user": mock_get_user,
+            "update_user_state": mock_update_user_state,
+        }
+    )
+    mock_messenger = Mock(
+        {
+            "edit_message_text": mock_edit_message_text,
+            "send_message": mock_send_message,
+            "answer_callback_query": mock_answer_callback_query,
+        }
+    )
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(SettingsCallbackHandler())

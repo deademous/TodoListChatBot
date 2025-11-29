@@ -17,11 +17,7 @@ async def test_message_show_tasks_handler_with_tasks():
         },
     }
 
-    calls = {
-        "clear_state": False,
-        "get_tasks": [],
-        "send_message": []
-    }
+    calls = {"clear_state": False, "get_tasks": [], "send_message": []}
 
     mock_tasks_today = [
         {"id": 1, "text": "Купить молоко", "task_time": "14:00", "status": "active"}
@@ -55,11 +51,13 @@ async def test_message_show_tasks_handler_with_tasks():
         calls["send_message"].append({"text": text, "params": params})
         return {"ok": True}
 
-    mock_storage = Mock({
-        "get_user": mock_get_user,
-        "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
-        "get_tasks_by_filter": mock_get_tasks_by_filter,
-    })
+    mock_storage = Mock(
+        {
+            "get_user": mock_get_user,
+            "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
+            "get_tasks_by_filter": mock_get_tasks_by_filter,
+        }
+    )
     mock_messenger = Mock({"send_message": mock_send_message})
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)

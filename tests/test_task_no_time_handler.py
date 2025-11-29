@@ -31,7 +31,9 @@ async def test_task_no_time_handler():
             "data_json": '{"text": "Проверить почту", "date": null}',
         }
 
-    async def mock_create_task(telegram_id: int, text: str, task_date: str | None, task_time: str | None):
+    async def mock_create_task(
+        telegram_id: int, text: str, task_date: str | None, task_time: str | None
+    ):
         assert telegram_id == 555
         assert text == "Проверить почту"
         assert task_date is None
@@ -43,7 +45,9 @@ async def test_task_no_time_handler():
         assert telegram_id == 555
         calls["clear_state"] = True
 
-    async def mock_edit_message_text(chat_id: int, message_id: int, text: str, **params):
+    async def mock_edit_message_text(
+        chat_id: int, message_id: int, text: str, **params
+    ):
         assert chat_id == 555
         assert message_id == 11
         assert "Готово! Задача создана (без времени)." in text

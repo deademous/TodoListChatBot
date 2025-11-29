@@ -38,7 +38,9 @@ async def test_show_tasks_callback_handler():
         calls["get_tasks"] = True
         return mock_tasks
 
-    async def mock_edit_message_text(chat_id: int, message_id: int, text: str, **params):
+    async def mock_edit_message_text(
+        chat_id: int, message_id: int, text: str, **params
+    ):
         assert chat_id == 123
         assert "Задачи на сегодня" in text
         calls["edit_message"] = True
@@ -48,15 +50,19 @@ async def test_show_tasks_callback_handler():
         calls["send_messages"].append(text)
         return {"ok": True}
 
-    mock_storage = Mock({
-        "get_user": mock_get_user,
-        "get_tasks_by_filter": mock_get_tasks_by_filter,
-    })
-    mock_messenger = Mock({
-        "edit_message_text": mock_edit_message_text,
-        "send_message": mock_send_message,
-        "answer_callback_query": lambda cb_id: None,
-    })
+    mock_storage = Mock(
+        {
+            "get_user": mock_get_user,
+            "get_tasks_by_filter": mock_get_tasks_by_filter,
+        }
+    )
+    mock_messenger = Mock(
+        {
+            "edit_message_text": mock_edit_message_text,
+            "send_message": mock_send_message,
+            "answer_callback_query": lambda cb_id: None,
+        }
+    )
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(ShowTasksCallbackHandler())

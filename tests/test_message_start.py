@@ -38,10 +38,12 @@ async def test_message_start_handler():
         calls["send_message"] = True
         return {"ok": True}
 
-    mock_storage = Mock({
-        "get_user": mock_get_user,
-        "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
-    })
+    mock_storage = Mock(
+        {
+            "get_user": mock_get_user,
+            "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
+        }
+    )
     mock_messenger = Mock({"send_message": mock_send_message})
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)

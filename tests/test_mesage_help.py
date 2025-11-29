@@ -18,9 +18,7 @@ async def test_message_help_handler():
         },
     }
 
-    calls = {
-        "send_message": False
-    }
+    calls = {"send_message": False}
 
     async def mock_get_user(telegram_id: int):
         assert telegram_id == 456

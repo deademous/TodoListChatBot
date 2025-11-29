@@ -3,7 +3,7 @@ from bot.dispatcher import Dispatcher
 from bot.handlers.menu_handlers.message_settings import MessageSettings
 from tests.mocks import Mock
 from bot.interface.keyboards import SETTINGS_KEYBOARD
-from bot.handlers.tools.handler import HandlerStatus
+
 
 @pytest.mark.asyncio
 async def test_message_settings_handler():
@@ -35,10 +35,9 @@ async def test_message_settings_handler():
         sent_reply_markup = params.get("reply_markup")
         return {"ok": True}
 
-    mock_storage = Mock({
-        "get_user": mock_get_user,
-        "get_user_settings": mock_get_user_settings
-    })
+    mock_storage = Mock(
+        {"get_user": mock_get_user, "get_user_settings": mock_get_user_settings}
+    )
     mock_messenger = Mock({"send_message": mock_send_message})
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)

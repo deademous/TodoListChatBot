@@ -38,7 +38,9 @@ async def test_task_date_handler():
         assert state == "WAIT_TASK_TIME"
         calls["update_state"] = True
 
-    async def mock_edit_message_text(chat_id: int, message_id: int, text: str, **params):
+    async def mock_edit_message_text(
+        chat_id: int, message_id: int, text: str, **params
+    ):
         assert chat_id == 333
         assert message_id == 10
         assert "Укажите время" in text

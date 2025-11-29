@@ -30,7 +30,9 @@ async def test_task_time_handler():
             "data_json": '{"text": "Позвонить другу", "date": "2025-01-01"}',
         }
 
-    async def mock_create_task(telegram_id: int, text: str, task_date: str, task_time: str):
+    async def mock_create_task(
+        telegram_id: int, text: str, task_date: str, task_time: str
+    ):
         assert telegram_id == 444
         assert text == "Позвонить другу"
         assert task_date == "2025-01-01"

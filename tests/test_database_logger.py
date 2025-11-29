@@ -18,9 +18,7 @@ async def test_database_logger_handler():
         },
     }
 
-    calls = {
-        "persist_update": False
-    }
+    calls = {"persist_update": False}
 
     async def mock_persist_update(update: dict):
         calls["persist_update"] = True

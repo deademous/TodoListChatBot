@@ -17,10 +17,7 @@ async def test_task_action_done():
         },
     }
 
-    calls = {
-        "update_status": False,
-        "edit_message": False
-    }
+    calls = {"update_status": False, "edit_message": False}
 
     async def mock_get_user(telegram_id: int):
         assert telegram_id == 789
@@ -35,7 +32,9 @@ async def test_task_action_done():
         assert task_id == 55
         return {"id": 55, "text": "Тест", "task_time": "12:00", "status": "done"}
 
-    async def mock_edit_message_text(chat_id: int, message_id: int, text: str, **params):
+    async def mock_edit_message_text(
+        chat_id: int, message_id: int, text: str, **params
+    ):
         assert chat_id == 789
         assert message_id == 30
         assert "✅ [ВЫПОЛНЕНО]" in text
@@ -84,7 +83,7 @@ async def test_task_action_postpone_start():
         "update_data": False,
         "update_state": False,
         "delete_msg": False,
-        "send_msg": False
+        "send_msg": False,
     }
 
     async def mock_get_user(telegram_id: int):

@@ -17,9 +17,7 @@ async def test_ensure_user_exists_handler():
         },
     }
 
-    calls = {
-        "ensure_user_exists": False
-    }
+    calls = {"ensure_user_exists": False}
 
     async def mock_ensure_user_exists(telegram_id: int):
         assert telegram_id == 12345

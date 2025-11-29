@@ -32,7 +32,9 @@ async def test_postpone_handler_callback():
         assert telegram_id == 888
         return {"state": "WAIT_POSTPONE_TIME", "data_json": '{"postpone_task_id": 123}'}
 
-    async def mock_update_task(task_id: int, task_date: str, task_time: str, status: str):
+    async def mock_update_task(
+        task_id: int, task_date: str, task_time: str, status: str
+    ):
         assert task_id == 123
         assert status == "active"
         assert task_time == expected_time
@@ -62,16 +64,20 @@ async def test_postpone_handler_callback():
     async def mock_answer_callback_query(cb_id: str):
         assert cb_id == "cb_3"
 
-    mock_storage = Mock({
-        "get_user": mock_get_user,
-        "update_task": mock_update_task,
-        "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
-        "get_task_by_id": mock_get_task_by_id,
-    })
-    mock_messenger = Mock({
-        "send_message": mock_send_message,
-        "answer_callback_query": mock_answer_callback_query,
-    })
+    mock_storage = Mock(
+        {
+            "get_user": mock_get_user,
+            "update_task": mock_update_task,
+            "clear_user_state_and_temp_data": mock_clear_user_state_and_temp_data,
+            "get_task_by_id": mock_get_task_by_id,
+        }
+    )
+    mock_messenger = Mock(
+        {
+            "send_message": mock_send_message,
+            "answer_callback_query": mock_answer_callback_query,
+        }
+    )
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
     dispatcher.add_handlers(PostponeHandler())

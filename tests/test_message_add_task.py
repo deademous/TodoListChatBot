@@ -18,10 +18,7 @@ async def test_message_add_task_handler():
         },
     }
 
-    calls = {
-        "update_state": False,
-        "send_message": False
-    }
+    calls = {"update_state": False, "send_message": False}
 
     async def mock_get_user(telegram_id: int):
         assert telegram_id == 123
@@ -39,10 +36,12 @@ async def test_message_add_task_handler():
         calls["send_message"] = True
         return {"ok": True}
 
-    mock_storage = Mock({
-        "get_user": mock_get_user,
-        "update_user_state": mock_update_user_state,
-    })
+    mock_storage = Mock(
+        {
+            "get_user": mock_get_user,
+            "update_user_state": mock_update_user_state,
+        }
+    )
     mock_messenger = Mock({"send_message": mock_send_message})
 
     dispatcher = Dispatcher(mock_storage, mock_messenger)
