@@ -1,10 +1,11 @@
-import json
-import logging
 import os
 import time
-import urllib.request
+import logging
+import aiohttp
 from dotenv import load_dotenv
 from bot.domain.messenger import Messenger
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -13,81 +14,60 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+
 class MessengerTelegram(Messenger):
-
-    def __init__(self):
-        load_dotenv()
+    def __init__(self) -> None:
         self._token = os.getenv("TELEGRAM_TOKEN")
-        self._base_uri = os.getenv("TELEGRAM_BASE_URI")
-        if not self._token or not self._base_uri:
-            raise ValueError("TELEGRAM_TOKEN или TELEGRAM_BASE_URI не найдены в .env")
+        if not self._token:
+            raise ValueError("TELEGRAM_TOKEN не найден в .env")
+        self._base_uri = f"https://api.telegram.org/bot{self._token}"
+        self._session: aiohttp.ClientSession | None = None
 
-    def _make_request(self, method: str, **params) -> dict:
-        url = f"{self._get_telegram_base_uri()}/{method}"
-        start_time = time.time()
+    async def _get_session(self) -> aiohttp.ClientSession:
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession()
+        return self._session
 
-        logger.info(f"[HTTP] → POST {method}")
-        json_data = json.dumps(params).encode("utf-8")
-        request = urllib.request.Request(
-            method="POST",
-            url=url,
-            data=json_data,
-            headers={"Content-Type": "application/json"},
-        )
-
+    async def _make_request(self, method: str, **params) -> dict:
+        url = f"{self._base_uri}/{method}"
         start_time = time.time()
         logger.info(f"[HTTP] → POST {method} started")
 
         try:
-            with urllib.request.urlopen(request) as response:
-                response_body = response.read().decode("utf-8")
-                response_json = json.loads(response_body)
+            session = await self._get_session()
+            async with session.post(url, json=params) as response:
+                response_json = await response.json()
                 assert response_json["ok"]
 
                 duration_ms = (time.time() - start_time) * 1000
                 logger.info(f"[HTTP] ← POST {method} finished - {duration_ms:.2f}ms")
-
                 return response_json["result"]
+
         except Exception as e:
             duration_ms = (time.time() - start_time) * 1000
             logger.error(f"[HTTP] ✗ POST {method} failed - {duration_ms:.2f}ms - Error: {e}")
             raise
 
+    async def close(self) -> None:
+        """Закрыть HTTP-сессию."""
+        if self._session and not self._session.closed:
+            await self._session.close()
 
-    def send_message(self, chat_id: int, text: str, **params) -> dict:
-        return self._make_request("sendMessage", chat_id=chat_id, text=text, **params)
+    # Методы Telegram API
+    async def send_message(self, chat_id: int, text: str, **params) -> dict:
+        return await self._make_request("sendMessage", chat_id=chat_id, text=text, **params)
 
-    def get_updates(self, **params) -> dict:
-        return self._make_request("getUpdates", **params)
+    async def get_updates(self, **params) -> list:
+        return await self._make_request("getUpdates", **params)
 
-    def delete_message(self, chat_id: int, message_id: int) -> dict:
-        return self._make_request(
-            "deleteMessage",
-            chat_id=chat_id,
-            message_id=message_id,
-        )
+    async def delete_message(self, chat_id: int, message_id: int) -> dict:
+        return await self._make_request("deleteMessage", chat_id=chat_id, message_id=message_id)
 
-    def answer_callback_query(self, callback_query_id: str, **params) -> dict:
-        return self._make_request(
-            "answerCallbackQuery",
-            callback_query_id=callback_query_id,
-            **params,
-        )
+    async def answer_callback_query(self, callback_query_id: str, **params) -> dict:
+        return await self._make_request("answerCallbackQuery", callback_query_id=callback_query_id, **params)
 
-    def edit_message_text(
-        self, chat_id: int, message_id: int, text: str, **params
-    ) -> dict:
-        return self._make_request(
-            "editMessageText",
-            chat_id=chat_id,
-            message_id=message_id,
-            text=text,
-            **params,
-        )
+    async def edit_message_text(self, chat_id: int, message_id: int, text: str, **params) -> dict:
+        return await self._make_request("editMessageText", chat_id=chat_id, message_id=message_id, text=text, **params)
 
-    def edit_message_reply_markup(
-        self, chat_id: int, message_id: int, **params
-    ) -> dict:
-        return self._make_request(
-            "editMessageReplyMarkup", chat_id=chat_id, message_id=message_id, **params
-        )
+    async def edit_message_reply_markup(self, chat_id: int, message_id: int, **params) -> dict:
+        return await self._make_request("editMessageReplyMarkup", chat_id=chat_id, message_id=message_id, **params)

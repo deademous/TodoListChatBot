@@ -40,22 +40,22 @@ class Storage(ABC):
     ) -> None: ...
 
     @abstractmethod
-    def get_due_tasks(self, current_date: str, current_time: str) -> list[dict]: ...
+    async def get_due_tasks(self, current_date: str, current_time: str) -> list[dict]: ...
 
     @abstractmethod
-    def mark_task_as_notified(self, task_id: int) -> None: ...
+    async def mark_task_as_notified(self, task_id: int) -> None: ...
 
     @abstractmethod
-    def get_users_for_time_check(
+    async def get_users_for_time_check(
         self, setting_type: str, current_time: str
     ) -> list[dict]: ...
 
     @abstractmethod
-    def get_active_tasks_for_digest(
+    async def get_active_tasks_for_digest(
         self, telegram_id: int, today_date: str
     ) -> list[dict]: ...
 
     @abstractmethod
-    def get_tasks_for_tomorrow(
+    async def get_tasks_for_tomorrow(
         self, telegram_id: int, tomorrow_date: str
     ) -> list[dict]: ...
