@@ -473,44 +473,42 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-        async def get_users_for_time_check(
-            self, setting_type: str, current_time: str
-        ) -> list[dict]:
-            method_name = "get_users_for_time_check"
-            start_time = time.time()
-            logger.info(
-                f"[DB] → {method_name} - Get users for {setting_type} at {current_time}"
+    async def get_users_for_time_check(self, setting_type: str, current_time: str) -> list[dict]:
+        method_name = "get_users_for_time_check"
+        start_time = time.time()
+        logger.info(
+            f"[DB] → {method_name} - Get users for {setting_type} at {current_time}"
+        )
+
+        if setting_type not in ("morning_digest_time", "evening_review_time"):
+            logger.warning(
+                f"[DB] ✗ {method_name} - Invalid setting_type: {setting_type}"
             )
+            return []
 
-            if setting_type not in ("morning_digest_time", "evening_review_time"):
-                logger.warning(
-                    f"[DB] ✗ {method_name} - Invalid setting_type: {setting_type}"
+        try:
+            pool = await self._get_pool()
+            async with pool.acquire() as conn:
+                rows = await conn.fetch(
+                    f"""
+                    SELECT t1.telegram_id, t2.{setting_type} AS setting_time
+                    FROM users t1
+                    JOIN user_settings t2 ON t1.telegram_id = t2.telegram_id
+                    WHERE t2.{setting_type} = $1
+                    """,
+                    current_time,
                 )
-                return []
 
-            try:
-                pool = await self._get_pool()
-                async with pool.acquire() as conn:
-                    rows = await conn.fetch(
-                        f"""
-                        SELECT t1.telegram_id, t2.{setting_type} AS setting_time
-                        FROM users t1
-                        JOIN user_settings t2 ON t1.telegram_id = t2.telegram_id
-                        WHERE t2.{setting_type} = $1
-                        """,
-                        current_time,
-                    )
-
-                result = [dict(row) for row in rows]
-                duration_ms = (time.time() - start_time) * 1000
-                logger.info(
-                    f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)"
-                )
-                return result
-            except Exception as e:
-                duration_ms = (time.time() - start_time) * 1000
-                logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
-                raise
+            result = [dict(row) for row in rows]
+            duration_ms = (time.time() - start_time) * 1000
+            logger.info(
+                f"[DB] ← {method_name} - {duration_ms:.2f}ms ({len(result)} rows)"
+            )
+            return result
+        except Exception as e:
+            duration_ms = (time.time() - start_time) * 1000
+            logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
+            raise
 
     async def get_active_tasks_for_digest(
         self, telegram_id: int, today_date: str
