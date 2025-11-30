@@ -218,7 +218,7 @@ touch Makefile .env
 4. Залить образ на удаленное устройство:
 
 
-make pull
+docker pull (username on DockerHun)/tg_todolist_bot
 
 5. Запуск контейнера с БД:
 
