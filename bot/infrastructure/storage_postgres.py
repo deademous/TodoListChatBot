@@ -473,7 +473,9 @@ class StoragePostgres(Storage):
             logger.error(f"[DB] ✗ {method_name} - {duration_ms:.2f}ms - Error: {e}")
             raise
 
-    async def get_users_for_time_check(self, setting_type: str, current_time: str) -> list[dict]:
+    async def get_users_for_time_check(
+        self, setting_type: str, current_time: str
+    ) -> list[dict]:
         method_name = "get_users_for_time_check"
         start_time = time.time()
         logger.info(
