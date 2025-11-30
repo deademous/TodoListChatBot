@@ -170,36 +170,68 @@ status - TEXT(Статус задачи: active, done, cancelled)
 
 # Инструкция по использованию
 1. Клонирование репозитория: 
+
 git clone https://github.com/deademous/TodoListChatBot
+
 2. Создать файл с переменными окружения:
+
 cd TodoListChatBot
+
 cat .env.example > .env
-3.Ввести значения для переменных окружения.
+
+3. Ввести значения для переменных окружения.
+
 4. Сборка проекта:
+
 make build
+
 5. Запуск контейнера с БД:
+
 make postgres_run
+
 6. Запуск контейнера с Телеграм ботом:
+
 make run
+
 7. Остановка контейнера с БД:
+
 make postgres_stop
+
 8. Остановка контейнера с Телеграм ботом:
+
 make stop
 
 # TelegramBot Deploy
+
 1. С локального устройства собрать проект:
+
 make build
+
 2. С локального устройства выложить образ на DockerHub:
+
 make push
+
 3. На удаленном устройстве созать Makefile и файл с переменными окружения и отредактировть их:
+
 touch Makefile .env
+
 4. Залить образ на удаленное устройство:
+
+
 make pull
+
 5. Запуск контейнера с БД:
+
 make postgres_run
+
 6. Запуск контейнера с Телеграм ботом:
+
 make run
+
 7. Для просмотра логов контейнера с БД:
+
 docker logs postgres_17
+
 8. Для просмотра логов Телеграм бота:
+
 docker logs todolist_bot
