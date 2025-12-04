@@ -5,7 +5,6 @@ from bot.domain.storage import Storage
 from bot.infrastructure.messenger_telegram import MessengerTelegram
 from bot.infrastructure.storage_postgres import StoragePostgres
 from bot.notifier import start_notifier
-import threading
 import bot.long_polling
 import asyncio
 
@@ -17,10 +16,7 @@ async def main() -> None:
         dispatcher = Dispatcher(storage, messenger)
         dispatcher.add_handlers(*get_handlers())
 
-        notifier_thread = threading.Thread(
-            target=start_notifier, args=(storage, messenger), daemon=True
-        )
-        notifier_thread.start()
+        asyncio.create_task(start_notifier(storage, messenger))
 
         await bot.long_polling.start_long_polling(dispatcher, messenger)
     except KeyboardInterrupt:
