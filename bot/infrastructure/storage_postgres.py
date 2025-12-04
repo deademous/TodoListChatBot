@@ -288,11 +288,25 @@ class StoragePostgres(Storage):
 
         query = ""
         if filter_type == "show_today":
-            query = "SELECT * FROM tasks WHERE telegram_id=$1 AND status='active' AND task_date=CAST(CURRENT_DATE AS TEXT)"
+            query = """
+                SELECT * FROM tasks
+                WHERE telegram_id=$1 AND status='active'
+                AND task_date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+            """
+
         elif filter_type == "show_tomorrow":
-            query = "SELECT * FROM tasks WHERE telegram_id=$1 AND status='active' AND task_date=CAST(CURRENT_DATE + INTERVAL '1 day' AS TEXT)"
+            query = """
+                SELECT * FROM tasks
+                WHERE telegram_id=$1 AND status='active'
+                AND task_date = TO_CHAR(CURRENT_DATE + INTERVAL '1 day', 'YYYY-MM-DD')
+            """
+
         elif filter_type == "show_nodate":
-            query = "SELECT * FROM tasks WHERE telegram_id=$1 AND status='active' AND task_date IS NULL"
+            query = """
+                SELECT * FROM tasks
+                WHERE telegram_id=$1 AND status='active'
+                AND task_date IS NULL
+            """
         else:
             duration_ms = (time.time() - start_time) * 1000
             logger.info(f"[DB] ← {method_name} - {duration_ms:.2f}ms (invalid filter)")

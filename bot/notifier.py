@@ -79,7 +79,9 @@ async def _send_task_list(
     header_text = f"{'☀️' if 'Утренний дайджест' in title else '🌙'} {title}\n"
 
     if not tasks:
-        await messenger.send_message(chat_id=chat_id, text=f"{header_text}Список задач пуст!")
+        await messenger.send_message(
+            chat_id=chat_id, text=f"{header_text}Список задач пуст!"
+        )
     else:
         await messenger.send_message(chat_id=chat_id, text=header_text)
 
